@@ -20,6 +20,10 @@ void AAct_Controller::OnPossess(APawn* InPawn)
 	checkf(EnhancedInputComponent,TEXT("Can't Find EnhancedInputComponent"));
 	checkf(EnhancedInputSubSystem,TEXT("Can't Find EnhancedInputSubSystem"));
 	AAct_Character *RefPlayer=CastChecked<AAct_Character>(InPawn);
+	//授予角色输入数据：
+	RefPlayer->InputDataAsset=GetInputDataAsset();
+	checkf(RefPlayer->InputDataAsset,TEXT("Can't ADDInputData"));
+	//
 	checkf(Player,TEXT("Can't Find Player"));
 	if (EnhancedInputSubSystem)
 	{	EnhancedInputSubSystem->AddMappingContext(NativeInputMappingContext,1);
@@ -34,4 +38,9 @@ void AAct_Controller::OnPossess(APawn* InPawn)
 			EnhancedInputComponent->BindAbilityFunctions(InputDataAsset->AbilityInputData,RefPlayer,&AAct_Character::BindSkill);
 		}
 	}
+}
+
+UInputDataAsset* AAct_Controller::GetInputDataAsset()
+{
+	return InputDataAsset;
 }

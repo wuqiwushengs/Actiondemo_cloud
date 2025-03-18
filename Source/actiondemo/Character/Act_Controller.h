@@ -27,5 +27,7 @@ public:
 	UInputMappingContext * AbilityInputMappingContext;
 	UFUNCTION()
 	virtual void OnPossess(APawn* InPawn) override;
+	UFUNCTION()
+	UInputDataAsset * GetInputDataAsset();
 	
 };

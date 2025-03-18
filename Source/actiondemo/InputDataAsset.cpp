@@ -3,6 +3,7 @@
 
 #include "InputDataAsset.h"
 
+
 UInputAction* UInputDataAsset::GetNativeInputActionBytag(FGameplayTag InputTag)
 {
 	UInputAction* NativeInputAction=nullptr;

@@ -24,13 +24,7 @@ void UAct_AbilitySystemComponent::BeginPlay()
 	
 }
 
-
-// Called every frame
-void UAct_AbilitySystemComponent::TickComponent(float DeltaTime, ELevelTick TickType,
-                                                FActorComponentTickFunction* ThisTickFunction)
+void UAct_AbilitySystemComponent::ProcessingInputData(const FInputActionInstance& ActionInstance, FGameplayTag Inputag,const UInputDataAsset* InputDataAsset)
 {
-	Super::TickComponent(DeltaTime, TickType, ThisTickFunction);
-
-	// ...
 }
 

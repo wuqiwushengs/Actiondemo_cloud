@@ -5,6 +5,7 @@
 #include "CoreMinimal.h"
 #include "Engine/DataAsset.h"
 #include "GameplayTagContainer.h"
+#include "InputFold/InputInfo.h"
 #include "InputAction.h"
 #include "InputDataAsset.generated.h"
 
@@ -21,6 +22,11 @@ struct FInputData
 	UInputAction * InputAction;
 	UPROPERTY(EditAnywhere,BlueprintReadWrite,Category="Input")
 	bool CanbeHold;
+	UPROPERTY(EditAnywhere,BlueprintReadWrite,Category="Input")
+	bool bAbilityInput;
+	//只有当是技能时才能打开设置
+	UPROPERTY(EditAnywhere,BlueprintReadWrite,Category="Input",meta=(EditCondition="bAbilityInput"))
+	EInputWeightType InputType;
 };
 UCLASS()
 class ACTIONDEMO_API UInputDataAsset : public UPrimaryDataAsset

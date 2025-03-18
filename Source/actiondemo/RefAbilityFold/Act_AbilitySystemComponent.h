@@ -4,8 +4,12 @@
 
 #include "CoreMinimal.h"
 #include "AbilitySystemComponent.h"
+#include "GameplayTagContainer.h"
+#include "actiondemo/InputDataAsset.h"
 #include "Act_AbilitySystemComponent.generated.h"
 
+
+struct FInputActionInstance;
 
 UCLASS(ClassGroup=(Custom), meta=(BlueprintSpawnableComponent))
 class ACTIONDEMO_API UAct_AbilitySystemComponent : public UAbilitySystemComponent
@@ -21,6 +25,6 @@ protected:
 	virtual void BeginPlay() override;
 
 public:
-	// Called every frame
-	virtual void TickComponent(float DeltaTime, ELevelTick TickType,FActorComponentTickFunction* ThisTickFunction) override;
+	UFUNCTION(BlueprintCallable, Category="InputDeal")
+	void ProcessingInputData(const FInputActionInstance& ActionInstance,FGameplayTag Inputag,const UInputDataAsset * InputDataAsset);
 };

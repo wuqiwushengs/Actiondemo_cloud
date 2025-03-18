@@ -3,6 +3,12 @@
 
 #include "Act_Character.h"
 
+#include "Camera/CameraComponent.h"
+#include "GameFramework/CharacterMovementComponent.h"
+#include "GameFramework/SpringArmComponent.h"
+#include "Kismet/KismetMathLibrary.h"
+#include "Kismet/KismetSystemLibrary.h"
+
 
 // Sets default values
 AAct_Character::AAct_Character()
@@ -10,6 +16,12 @@ AAct_Character::AAct_Character()
 	// Set this character to call Tick() every frame.  You can turn this off to improve performance if you don't need it.
 	PrimaryActorTick.bCanEverTick = true;
 	ActAbilitySystemComponent=CreateDefaultSubobject<UAct_AbilitySystemComponent>("Act_AbilitySystemComponent");
+	SpringArmComponent=CreateDefaultSubobject<USpringArmComponent>("SpringArmComponent");
+	CameraComponent=CreateDefaultSubobject<UCameraComponent>("CameraComponent");
+	CameraComponent->SetupAttachment(SpringArmComponent);
+	SpringArmComponent->SetupAttachment(RootComponent);
+	bUseControllerRotationYaw=false;
+	GetCharacterMovement()->bUseControllerDesiredRotation=true;
 }
 
 // Called when the game starts or when spawned
@@ -44,17 +56,29 @@ void AAct_Character::SetupPlayerInputComponent(UInputComponent* PlayerInputCompo
 
 void AAct_Character::MoveAround(const FInputActionValue& InputAction)
 {
-	GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Red, "MoveAround");
+	FVector2d InputValue=InputAction.Get<FVector2d>();
+	FRotator ControllRotation=GetControlRotation();
+	FVector ForwardVector=UKismetMathLibrary::GetForwardVector(ControllRotation);
+	ForwardVector.Normalize();
+	FVector RightVector=UKismetMathLibrary::GetRightVector(ControllRotation);
+	RightVector.Normalize();
+	AddMovementInput(ForwardVector,InputValue.Y);
+	AddMovementInput(RightVector,InputValue.X);
 }
 
 void AAct_Character::LookAround(const FInputActionValue& InputAction)
 {
-	GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Red, "LookAround");
+	FVector2d InputValue=InputAction.Get<FVector2d>();
+	AddControllerPitchInput(InputValue.Y);
+	AddControllerYawInput(InputValue.X);
 }
 
-void AAct_Character::BindSkill(const FInputActionValue& InputAction, FGameplayTag Inputag)
+void AAct_Character::BindSkill(const FInputActionInstance& ActionInstance, FGameplayTag Inputag)
 {
-	GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Red, TEXT("BindSkill"));
+	if (InputDataAsset)
+	{
+		GetAct_AbilitySystemComponent()->ProcessingInputData(ActionInstance,Inputag,InputDataAsset);
+	}
 
 }
 

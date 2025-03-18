@@ -31,7 +31,8 @@ public:
 //绑定技能函数
 template <typename Userobject, typename CallBackFunction>
 inline void UAct_InputComponent::BindAbilityFunctions( TArray<FInputData>& InputData, Userobject* owner,CallBackFunction FunctionName)
-{  for (FInputData & Data : InputData)
+{
+	for (FInputData & Data : InputData)
 	{
 	BindAction(Data.InputAction,ETriggerEvent::Started,owner,FunctionName,Data.InputTag);
 	if (Data.CanbeHold)
@@ -42,5 +43,5 @@ inline void UAct_InputComponent::BindAbilityFunctions( TArray<FInputData>& Input
 	}
 
 }
-//绑定普通操作函数
+
 
