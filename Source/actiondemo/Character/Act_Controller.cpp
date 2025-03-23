@@ -29,10 +29,13 @@ void AAct_Controller::OnPossess(APawn* InPawn)
 	{	EnhancedInputSubSystem->AddMappingContext(NativeInputMappingContext,1);
 		UInputAction*  MoveAction=InputDataAsset->GetNativeInputActionBytag(ActTagContainer::CharacterMoveAround);
 		UInputAction*  LookAroundActon=InputDataAsset->GetNativeInputActionBytag(ActTagContainer::CharacterCameraMoveAround);
+		UInputAction* LockAction=InputDataAsset->GetNativeInputActionBytag(ActTagContainer::LockTarget);
 		check(MoveAction);
 		check(LookAroundActon);
+		check(LockAction);
 		EnhancedInputComponent->BindAction(MoveAction,ETriggerEvent::Triggered,RefPlayer,&AAct_Character::MoveAround);
 		EnhancedInputComponent->BindAction(LookAroundActon,ETriggerEvent::Triggered,RefPlayer,&AAct_Character::LookAround);
+		EnhancedInputComponent->BindAction(LockAction,ETriggerEvent::Started,RefPlayer,&AAct_Character::LockSystem);
 		if (InputDataAsset->AbilityInputData.Num()>0)
 		{	EnhancedInputSubSystem->AddMappingContext(AbilityInputMappingContext,0);
 			EnhancedInputComponent->BindAbilityFunctions(InputDataAsset->AbilityInputData,RefPlayer,&AAct_Character::BindSkill);

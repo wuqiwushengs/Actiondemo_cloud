@@ -4,6 +4,7 @@
 #include "InputDataAsset.h"
 
 
+
 UInputAction* UInputDataAsset::GetNativeInputActionBytag(FGameplayTag InputTag)
 {
 	UInputAction* NativeInputAction=nullptr;
@@ -30,6 +31,18 @@ TArray<FInputData> UInputDataAsset::GetNativeInputActions()
 	return NativeInputData;
 }
 
+FInputData& UInputDataAsset::GetNativeInputData(FGameplayTag InputTag) 
+{
+	for (FInputData &  Data: NativeInputData)
+	{
+		if (Data.InputTag!=InputTag) continue;
+		return  Data;
+	}
+	UE_LOG(LogTemp,Warning,TEXT("Can't Find Conrrect AbilityInputdata"));
+
+	return NativeInputData[0];
+}
+
 UInputAction* UInputDataAsset::GetAbilityInputActionBytag(FGameplayTag Inputtag)
 {
 	UInputAction* AbilityInputAction=nullptr;
@@ -49,6 +62,18 @@ UInputAction* UInputDataAsset::GetAbilityInputActionBytag(FGameplayTag Inputtag)
 		UE_LOG(LogTemp,Warning,TEXT("Can't Find Native InputAction"))
 	}
 	return AbilityInputAction; 
+}
+
+FInputData& UInputDataAsset::GetAbilityInputDatabyTag(FGameplayTag InputTag) 
+{
+	for (FInputData &  Data: AbilityInputData)
+	{
+		if (Data.InputTag!=InputTag) continue;
+		return  Data;
+	}
+
+	UE_LOG(LogTemp,Warning,TEXT("Can't Find Conrrect AbilityInputdata"));
+	return AbilityInputData[0];
 }
 
 TArray<FInputData> UInputDataAsset::GetAbilityInputActions()

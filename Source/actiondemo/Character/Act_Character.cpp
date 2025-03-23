@@ -10,6 +10,7 @@
 #include "Kismet/KismetSystemLibrary.h"
 
 
+
 // Sets default values
 AAct_Character::AAct_Character()
 {
@@ -29,12 +30,13 @@ void AAct_Character::BeginPlay()
 {
 	Super::BeginPlay();
 	
+	
 }
 
 // Called every frame
 void AAct_Character::Tick(float DeltaTime)
-{
-	Super::Tick(DeltaTime);
+{	Super::Tick(DeltaTime);
+	GEngine->AddOnScreenDebugMessage(-1,0.1,FColor::Black,FString::Printf(TEXT("%d"),GetAct_AbilitySystemComponent()->InputTagsInbuff.Num()));
 }
 
 UAbilitySystemComponent* AAct_Character::GetAbilitySystemComponent() const 
@@ -73,12 +75,37 @@ void AAct_Character::LookAround(const FInputActionValue& InputAction)
 	AddControllerYawInput(InputValue.X);
 }
 
-void AAct_Character::BindSkill(const FInputActionInstance& ActionInstance, FGameplayTag Inputag)
+void AAct_Character::LockSystem(const FInputActionValue& InputAction)
 {
+	if (!GetAct_AbilitySystemComponent()->GetOwnedGameplayTags().HasTagExact(ActTagContainer::LockTarget))
+	{
+		GetAct_AbilitySystemComponent()->AddLooseGameplayTag(ActTagContainer::LockTarget);
+	}
+	else
+	{
+		GetAct_AbilitySystemComponent()->RemoveLooseGameplayTag(ActTagContainer::LockTarget);
+	}
+	
+}
+
+
+void AAct_Character::BindSkill(const FInputActionInstance& ActionInstance, FGameplayTag Inputag)
+{	
 	if (InputDataAsset)
 	{
-		GetAct_AbilitySystemComponent()->ProcessingInputData(ActionInstance,Inputag,InputDataAsset);
+		if (ActionInstance.GetTriggerEvent()==ETriggerEvent::Started)
+		{
+			GetAct_AbilitySystemComponent()->ProcessingInputDataStarted(ActionInstance,Inputag,InputDataAsset);
+		}
+		if (ActionInstance.GetTriggerEvent()==ETriggerEvent::Triggered)
+		{
+			GetAct_AbilitySystemComponent()->ProcessingInputDataTriggering(ActionInstance,Inputag,InputDataAsset);
+		}
+		if (ActionInstance.GetTriggerEvent()==ETriggerEvent::Completed)
+		{
+			GetAct_AbilitySystemComponent()->ProcessingInputDataComplete(ActionInstance,Inputag,InputDataAsset);
+		}
 	}
-
+	
 }
 

@@ -27,6 +27,8 @@ struct FInputData
 	//只有当是技能时才能打开设置
 	UPROPERTY(EditAnywhere,BlueprintReadWrite,Category="Input",meta=(EditCondition="bAbilityInput"))
 	EInputWeightType InputType;
+	UPROPERTY(EditAnywhere,BlueprintReadWrite,Category="Input",meta=(EditCondition="bAbilityInput"))
+	bool bDestoryInputBuffer=false;
 };
 UCLASS()
 class ACTIONDEMO_API UInputDataAsset : public UPrimaryDataAsset
@@ -43,7 +45,11 @@ class ACTIONDEMO_API UInputDataAsset : public UPrimaryDataAsset
 	UFUNCTION()
 	TArray<FInputData>  GetNativeInputActions();
 	UFUNCTION()
+	FInputData & GetNativeInputData(FGameplayTag InputTag) ;
+	UFUNCTION()
 	UInputAction * GetAbilityInputActionBytag(FGameplayTag Inputtag);
+	UFUNCTION()
+	FInputData& GetAbilityInputDatabyTag(FGameplayTag InputTag) ;
 	UFUNCTION()
 	TArray<FInputData>  GetAbilityInputActions();
 };
