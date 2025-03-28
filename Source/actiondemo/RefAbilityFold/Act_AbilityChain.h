@@ -134,6 +134,7 @@ public:
 	UPROPERTY()
 	UAct_AbilityChainChildNode * SelectedNode;
 	//将分支传去下一个支
+	//TODO::当不同情况下到某个位置时的技能，需要在AbilityType中放置一个技能数组，并且能够在序列化时向技能数组中放置并且能够排除一些枚举相同的技能比如当我都是在翻滚时按x 有两个翻滚时按x则只收录一个。
 	UFUNCTION()
 	virtual bool ToNextNode( UAct_AbilityChainChildNode * CurrentNode,EAttackType AttackType=EAttackType::RelaxAttack);
 	UFUNCTION()
