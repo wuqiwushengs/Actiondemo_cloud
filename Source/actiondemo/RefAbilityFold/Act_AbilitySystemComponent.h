@@ -1,9 +1,9 @@
-﻿// Fill out your copyright notice in the Description page of Project Settings.
-
-#pragma once
+﻿#pragma once
 
 #include "CoreMinimal.h"
 #include "AbilitySystemComponent.h"
+#include "Act_AbilityChain.h"
+#include "Act_AbilityDatas.h"
 #include "GameplayTagContainer.h"
 #include "actiondemo/InputDataAsset.h"
 #include "Act_AbilitySystemComponent.generated.h"
@@ -29,6 +29,7 @@ struct FAbilityInputInfo
 	//用来设置不同输入之间的时间间隔
 	UPROPERTY()
 	float InputIntervalTime;
+	//其权重和InputData中的权重相同
 	UPROPERTY()
 	EInputWeightType InputWeightType;
 	float CheckTimeInterval(const FAbilityInputInfo &FirstInputInfo) const;
@@ -53,6 +54,7 @@ protected:
 	// Called when the game starts
 	virtual void BeginPlay() override;
 	virtual void TickComponent(float DeltaTime, enum ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction) override;
+	virtual void EndPlay(const EEndPlayReason::Type EndPlayReason) override;
 public:
 	//Processing Function
 	UFUNCTION(BlueprintCallable, Category="InputDeal")
@@ -89,4 +91,10 @@ public:
 	FTimeLockDelegate InputLockDelegate;
 	UPROPERTY()
 	FTimeLockDelegate InputUnlockDelegate;
+
+	//技能文件
+	UPROPERTY(EditDefaultsOnly,BlueprintReadWrite)
+	TObjectPtr<UAct_AbilityDatasManager> AbilityDataManager;
+	UPROPERTY(EditDefaultsOnly,BlueprintReadWrite)
+	TObjectPtr<UAct_AbilityChainManager> AbilityChainManager;
 };

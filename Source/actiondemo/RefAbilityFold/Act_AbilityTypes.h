@@ -3,7 +3,7 @@
 #include "Engine/DataTable.h"
 #include "GameplayTagContainer.h"
 #include "CoreMinimal.h"
-#include "actiondemo/Character/Act_Character.h"
+#include "actiondemo/Character/CharacterTypes.h"
 #include "Act_AbilityTypes.generated.h"
 
 
@@ -17,7 +17,7 @@ public:
 	TSubclassOf<UAct_Ability> Ability;
 	UPROPERTY(EditDefaultsOnly)
 	ECharacterUnAttackingState AttackingState=ECharacterUnAttackingState::Normal;
-	//对应的输入tag
+	//对应的输入tag(Relax OR heavy)
 	UPROPERTY(EditDefaultsOnly)
 	FGameplayTag InputTag;
 	//技能表 为固定的字符在Act_AbilitySystemComponent中的宏编写
@@ -26,6 +26,6 @@ public:
 	//获取技能的长度
 	int32 GetAbilityListSize();
 	//获取技能的内容通过索引
-	TCHAR GetAbilityListContentByIndex(int32 index=0,bool GetEnd=true);
+	TCHAR * GetAbilityListContentByIndex(int32 index=0,bool GetEnd=true);
 	
 };

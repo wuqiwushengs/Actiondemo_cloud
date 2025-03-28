@@ -7,6 +7,7 @@
 #include "InputAction.h"
 #include "actiondemo/Act_TagContainer.h"
 #include "actiondemo/InputDataAsset.h"
+#include "CharacterTypes.h"
 #include "actiondemo/RefAbilityFold/Act_AbilitySystemComponent.h"
 #include "GameFramework/Character.h"
 #include "Act_Character.generated.h"
@@ -14,20 +15,6 @@
 class UCameraComponent;
 class USpringArmComponent;
 
-UENUM(BlueprintType)
-enum class ECharacterState:uint8
-{
-	UnAttacking,
-	Attacking,
-};
-
-UENUM(BlueprintType)
-enum class ECharacterUnAttackingState:uint8
-{
-	Normal,
-	Defense,
-	Rolling,
-};
 UCLASS()
 class ACTIONDEMO_API AAct_Character : public ACharacter,public IAbilitySystemInterface
 {
@@ -73,4 +60,11 @@ public:
 
 	UPROPERTY(BlueprintReadWrite,Category="InputDatat")
 	TObjectPtr<UInputDataAsset> InputDataAsset;
+
+//Playerstate
+#pragma region PlayerState
+	UPROPERTY(EditDefaultsOnly,BlueprintReadWrite,Category="Playerstate")
+	ECharacterState CharacterState=ECharacterState::UnAttacking;
+	UPROPERTY(EditDefaultsOnly,BlueprintReadWrite,Category="Playerstate")
+	ECharacterUnAttackingState CharacterUnAttackingState=ECharacterUnAttackingState::Normal;
 };

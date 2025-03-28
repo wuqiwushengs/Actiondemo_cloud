@@ -17,16 +17,26 @@ class ACTIONDEMO_API UAct_AbilityDatas : public UPrimaryDataAsset
 {
 	GENERATED_BODY()
 public:
-	UAct_AbilityDatas();
-	//仅限放入Act_AbilityTypes的内容
+	//仅限放入Act_AbilityTypes的内容，要注意每个位置只能放置一个x或Y不能出现 xx xx重复出现的情况
 	UPROPERTY(EditDefaultsOnly,BlueprintReadWrite,Category="AbilitiesContent")
 	UDataTable * AbilitiesContent;
-	//分开的轻攻击和重攻击
+	
+	
+};
+
+UCLASS()
+class ACTIONDEMO_API UAct_AbilityDatasManager : public UObject
+{
+	GENERATED_BODY()
+
+public:
+	UPROPERTY(EditDefaultsOnly,BlueprintReadWrite,Category="AbilitiesContent")
+	TObjectPtr<UAct_AbilityDatas> AbilityData;
 	UPROPERTY()
 	TArray<FAct_AbilityTypes> AbilitTypesRelaxHead;
 	UPROPERTY()
 	TArray<FAct_AbilityTypes> AbilitTypesHeavyHead;
-	//通过此来区分轻攻击和重攻击
 	UFUNCTION()
-	bool SortAbilityTypesByAttackType(const FAct_AbilityTypes &A,const FAct_AbilityTypes &B);
+	virtual void init();
 };
+
