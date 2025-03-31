@@ -37,4 +37,5 @@ void UAct_AbilityChainManager::BeginConstruct(const UAct_AbilityDatasManager* da
 {
 	AbilityChainRoot=NewObject<UAct_AbilityChainRoot>();
 	AbilityChainRoot->Serlize(datas);
+
 }

@@ -63,7 +63,7 @@ void UAct_AbilitySystemComponent::ProcessingInputDataStarted(const FInputActionI
 		GetWorld()->GetTimerManager().SetTimer(FinalInputHandle,this,&UAct_AbilitySystemComponent::CheckFinalInput,AbilityInputBuffTime,false);
 	}
 	
-	}
+}
 void UAct_AbilitySystemComponent::ProcessingInputDataTriggering(const FInputActionInstance& ActionInstance,FGameplayTag Inputag, UInputDataAsset* InputDataAsset)
 {
 }
@@ -73,7 +73,7 @@ void UAct_AbilitySystemComponent::ProcessingInputDataComplete(const FInputAction
 }
 
 bool UAct_AbilitySystemComponent::ChekcInputLengthToSetInputLock(float InputLength,const FInputActionInstance & ActionInstance,UInputDataAsset *InputDataAsset,FGameplayTag Inputtag)
-{
+{//如果输入时间超过缓冲时间则设置输入锁。
 	if (InputLength>=AbilityInputBuffTime)
 	{
 		SetInputLock(ActionInstance,InputDataAsset,Inputtag);

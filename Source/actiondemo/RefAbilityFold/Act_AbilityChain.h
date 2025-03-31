@@ -1,11 +1,14 @@
 ﻿#pragma once
 #include "CoreMinimal.h"
 #include "Act_Ability.h"
+#include "Act_AbilityChainFunctionLibrary.h"
 #include "Act_AbilityDatas.h"
 #include "Act_AbilityTypes.h"
 #include "actiondemo/Act_TagContainer.h"
 #include "Act_AbilityChain.generated.h"
 
+
+class UAct_AbilityChainFunctionLibrary;
 
 UENUM(BlueprintType)
 enum EAttackType
@@ -26,7 +29,7 @@ public:
 	UPROPERTY()
 	TObjectPtr<UAct_AbilityChainChildNode>  NextHeavyAttack=nullptr;
 	//本节所存储的技能：
-	FAct_AbilityTypes SelfAbilityType;
+	TArray<FAct_AbilityTypes> SelfAbilityType;
 	int32 length=0;
 	//检查是否存在
 	bool CheckNextIsValid(EAttackType CheckType) const 
@@ -40,10 +43,10 @@ public:
 		return false;
 		
 	}
-	void initialNode(FAct_AbilityTypes AbilityTypes,int32 lengths)
+	void initialNode(const FAct_AbilityTypes &  AbilityTypes,int32 lengths)
 	{
 		
-		SelfAbilityType=AbilityTypes;
+		SelfAbilityType.Add(AbilityTypes);
 		length=lengths;
 	}
 };
@@ -54,40 +57,46 @@ class  ACTIONDEMO_API UAct_AbilityChainRoot:public UObject
 public:
 	void Serlize(const UAct_AbilityDatasManager* datas)
 	{	//获取数据中的技能
-		delete PrimaryRelaxAbilityHead;
 		PrimaryRelaxAbilityHead=nullptr;
-		delete PrimaryHeavyAbilityHead;
 		PrimaryHeavyAbilityHead=nullptr;
 	    TArray<FAct_AbilityTypes> HeavyData=datas->AbilitTypesHeavyHead;
     	TArray<FAct_AbilityTypes> RelaxData=datas->AbilitTypesRelaxHead;
-	    if (RelaxData.Num()>0)
+	    if (RelaxData.Num() > 0 && RelaxData[0].AbilityList.StartsWith("X"))
 	    {
 		    PrimaryRelaxAbilityHead=NewObject<UAct_AbilityChainChildNode>();
-	    	 PrimaryRelaxAbilityHead->initialNode(RelaxData[0],1);
+	    	PrimaryRelaxAbilityHead->initialNode(RelaxData[0],1);
 	    }
-	    if (HeavyData.Num()>0)
+	    if (HeavyData.Num() > 0 && HeavyData[0].AbilityList.StartsWith("Y"))
 	    {
 		    
 	    	PrimaryHeavyAbilityHead=NewObject<UAct_AbilityChainChildNode>();
 	    	PrimaryHeavyAbilityHead->initialNode(HeavyData[0],1);
 	    }
+		
 		for (int i=1;i<RelaxData.Num();i++)
 		{
 			FAct_AbilityTypes CurrentAbilityType=RelaxData[i];
 			FString CombatSequence=CurrentAbilityType.AbilityList;
 			if (CombatSequence.Len()==0||CombatSequence[0]!='X') continue;
-			UAct_AbilityChainChildNode* CurrentNode=PrimaryRelaxAbilityHead;
+			UAct_AbilityChainChildNode* CurrentRelaxNode=PrimaryRelaxAbilityHead;
 			for (int32 CharIndex=1;CharIndex<CombatSequence.Len();CharIndex++)
 			{
 				TCHAR CurrentChar=CombatSequence[CharIndex];
 				EAttackType AttackType=(CurrentChar=='X')?EAttackType::RelaxAttack:EAttackType::HeavyAttack;
-				TObjectPtr<UAct_AbilityChainChildNode>& NextNode=(AttackType==EAttackType::RelaxAttack)?CurrentNode->NextRelaxAttack:CurrentNode->NextHeavyAttack;
+				TObjectPtr<UAct_AbilityChainChildNode>& NextNode=(AttackType==EAttackType::RelaxAttack)?CurrentRelaxNode->NextRelaxAttack:CurrentRelaxNode->NextHeavyAttack;
 				if (!NextNode)
 				{
 					NextNode=NewObject<UAct_AbilityChainChildNode>();
 					NextNode->initialNode(CurrentAbilityType,CharIndex+1);
+					
 				}
-				CurrentNode=NextNode;
+				if (NextNode->length==CurrentAbilityType.AbilityList.Len() && !UAct_AbilityChainFunctionLibrary::CheckAbilityArrayHasContain(NextNode->SelfAbilityType,CurrentAbilityType))
+				{
+					NextNode->SelfAbilityType.Add(CurrentAbilityType);
+				}
+				CurrentRelaxNode=NextNode;
+				
+				
 			}
 		
 		
@@ -98,18 +107,23 @@ public:
 			FAct_AbilityTypes CurrentAbilityType=HeavyData[i];
 			FString CombatSequence=CurrentAbilityType.AbilityList;
 			if (CombatSequence.Len()==0||CombatSequence[0]!='Y') continue;
-			UAct_AbilityChainChildNode* CurrentNode=PrimaryHeavyAbilityHead;
+			UAct_AbilityChainChildNode* CurrentHeavyNode=PrimaryHeavyAbilityHead;
 			for (int32 CharIndex=1;CharIndex<CombatSequence.Len();CharIndex++)
 			{
 				TCHAR CurrentChar=CombatSequence[CharIndex];
 				EAttackType AttackType=(CurrentChar=='X')?EAttackType::RelaxAttack:EAttackType::HeavyAttack;
-				TObjectPtr<UAct_AbilityChainChildNode>& NextNode=(AttackType==EAttackType::RelaxAttack)?CurrentNode->NextRelaxAttack:CurrentNode->NextHeavyAttack;
-				if (!CurrentNode->CheckNextIsValid(AttackType))
+				TObjectPtr<UAct_AbilityChainChildNode>& NextNode=(AttackType==EAttackType::RelaxAttack)?CurrentHeavyNode->NextRelaxAttack:CurrentHeavyNode->NextHeavyAttack;
+				if (!NextNode)
 				{
 					NextNode=NewObject<UAct_AbilityChainChildNode>();
 					NextNode->initialNode(CurrentAbilityType,CharIndex+1);
 				}
-				CurrentNode=NextNode;
+				if (NextNode->length==CurrentAbilityType.AbilityList.Len() && !UAct_AbilityChainFunctionLibrary::CheckAbilityArrayHasContain(NextNode->SelfAbilityType,CurrentAbilityType))
+				{
+					NextNode->SelfAbilityType.Add(CurrentAbilityType);
+					
+				}
+				CurrentHeavyNode=NextNode;
 			}
 			
 		}
