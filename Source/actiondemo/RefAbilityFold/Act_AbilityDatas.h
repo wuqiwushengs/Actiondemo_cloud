@@ -19,24 +19,45 @@ class ACTIONDEMO_API UAct_AbilityDatas : public UPrimaryDataAsset
 public:
 	//仅限放入Act_AbilityTypes的内容，要注意每个位置只能放置一个x或Y不能出现 xx xx重复出现的情况
 	UPROPERTY(EditDefaultsOnly,BlueprintReadWrite,Category="AbilitiesContent")
-	UDataTable * AbilitiesContent;
+	TMap<ECharacterUnAttackingState,UDataTable*>AbilitiesContent;
 	
 	
 };
 
+USTRUCT()
+struct FAct_Abilities
+{
+	GENERATED_BODY()
+	TArray<FAct_AbilityTypes> AbilityTypes;
+	
+};
+
+USTRUCT()
+struct FAbilitySum
+{
+	GENERATED_BODY()
+	UPROPERTY()
+	TMap<ECharacterUnAttackingState,FAct_Abilities> AbilityTypesRelaxHead;
+	UPROPERTY()
+	TMap<ECharacterUnAttackingState,FAct_Abilities> AbilityTypesHeavyHead;
+};
 UCLASS()
 class ACTIONDEMO_API UAct_AbilityDatasManager : public UObject
 {
 	GENERATED_BODY()
 
 public:
+	//存储着多个状态的数据,通过读取不同状态的datatable来获取
 	UPROPERTY(EditDefaultsOnly,BlueprintReadWrite,Category="AbilitiesContent")
 	TObjectPtr<UAct_AbilityDatas> AbilityData;
+	//分着多个状态的技能数据
 	UPROPERTY()
-	TArray<FAct_AbilityTypes> AbilitTypesRelaxHead;
-	UPROPERTY()
-	TArray<FAct_AbilityTypes> AbilitTypesHeavyHead;
+	FAbilitySum AbilitySum;
 	UFUNCTION()
 	virtual void init();
+	void ClearAbilityData();
+	TMap<ECharacterUnAttackingState,FAct_Abilities> LoadAbilityData();
+	FAbilitySum LoadAbilitySum(TMap<ECharacterUnAttackingState,FAct_Abilities> Ability);
+	
 };
 

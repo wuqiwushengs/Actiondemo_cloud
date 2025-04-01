@@ -10,10 +10,7 @@
 //用来标明该轻攻击和重攻击所用的字符，后续技能表中只允许添加这两个字符
 #define RelaxAttackName "X"
 #define HeavyAttackName "Y"
-DECLARE_DYNAMIC_DELEGATE_ThreeParams(FTimeLockDelegate,const FInputActionInstance&,InpuActiondata, UInputDataAsset *,InputDataAsset,FGameplayTag, InputTag);
-
 struct FInputActionInstance;
-
 //用来存储tag和世界时间
 USTRUCT(BlueprintType)
 struct FAbilityInputInfo
@@ -39,7 +36,8 @@ inline float FAbilityInputInfo::CheckTimeInterval(const FAbilityInputInfo &First
 	float Intervaltime=this->InputWordTime-FirstInputInfo.InputWordTime;
 	return Intervaltime;
 }
-
+DECLARE_DYNAMIC_DELEGATE_ThreeParams(FTimeLockDelegate,const FInputActionInstance&,InpuActiondata, UInputDataAsset *,InputDataAsset,FGameplayTag, InputTag);
+DECLARE_DYNAMIC_DELEGATE_OneParam(FInputExecuteDelegate,const FAbilityInputInfo,Inputinfo);
 
 UCLASS(ClassGroup=(Custom), meta=(BlueprintSpawnableComponent))
 class ACTIONDEMO_API UAct_AbilitySystemComponent : public UAbilitySystemComponent
@@ -91,10 +89,15 @@ public:
 	FTimeLockDelegate InputLockDelegate;
 	UPROPERTY()
 	FTimeLockDelegate InputUnlockDelegate;
-
+	//输入缓冲结束后执行
+	UPROPERTY()
+	FInputExecuteDelegate InputExecuteDelegate;
+	UFUNCTION(BlueprintCallable)
+	void OnInputFinal(const FAbilityInputInfo& InputInfo);
 	//技能文件
 	UPROPERTY(EditDefaultsOnly,BlueprintReadWrite)
 	TObjectPtr<UAct_AbilityDatasManager> AbilityDataManager;
+	//技能树文件
 	UPROPERTY(EditDefaultsOnly,BlueprintReadWrite)
 	TObjectPtr<UAct_AbilityChainManager> AbilityChainManager;
 };

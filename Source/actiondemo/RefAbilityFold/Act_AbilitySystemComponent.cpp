@@ -17,8 +17,6 @@ UAct_AbilitySystemComponent::UAct_AbilitySystemComponent()
 	AbilityChainManager=CreateDefaultSubobject<UAct_AbilityChainManager>("AbilityChainManager");
 	// ...
 }
-
-
 // Called when the game starts
 void UAct_AbilitySystemComponent::BeginPlay()
 {
@@ -32,25 +30,20 @@ void UAct_AbilitySystemComponent::BeginPlay()
 	{
 		AbilityChainManager->BeginConstruct(AbilityDataManager);
 	}
+	InputExecuteDelegate.BindUFunction(this,TEXT("InputExecuteDelegate"));
+	
 	// ...
 	
 }
-
 void UAct_AbilitySystemComponent::TickComponent(float DeltaTime, enum ELevelTick TickType,FActorComponentTickFunction* ThisTickFunction)
 {
 	Super::TickComponent(DeltaTime, TickType, ThisTickFunction);
-	
-	
-	
-	
-	
 }
-
 void UAct_AbilitySystemComponent::EndPlay(const EEndPlayReason::Type EndPlayReason)
 {
 	Super::EndPlay(EndPlayReason);
+	
 }
-
 void UAct_AbilitySystemComponent::ProcessingInputDataStarted(const FInputActionInstance& ActionInstance,FGameplayTag Inputag, UInputDataAsset* InputDataAsset)
 {  //获得当前所有输入的tag以及输入的世界时间
 	//处理输入缓存设置
@@ -104,7 +97,7 @@ void UAct_AbilitySystemComponent::SetInputUnlock(const FInputActionInstance& Act
 }
 
 bool UAct_AbilitySystemComponent::ExeAbilityInputInfo(const TArray<FAbilityInputInfo>& InputTagsBuff,FAbilityInputInfo& OutInputInfo)
-{
+{	//根据权重来进行检查
 	int32 ExeInputIndex=INDEX_NONE;
 	if (InputTagsBuff.Num()<=0) return false;
 	for (int index=0;FAbilityInputInfo InputInfo:InputTagsBuff)
@@ -122,17 +115,35 @@ bool UAct_AbilitySystemComponent::ExeAbilityInputInfo(const TArray<FAbilityInput
 	return  false;
 }
 
-
-
 void UAct_AbilitySystemComponent::CheckFinalInput()
 {
 	//对输入内容进行选择：
 	FAbilityInputInfo FinalInputInfo;
 	if (ExeAbilityInputInfo(InputTagsInbuff,FinalInputInfo))
 	{
-		GEngine->AddOnScreenDebugMessage(-1,5,FColor::Black,FString::Printf(TEXT("FinalInput %s"),*FinalInputInfo.InputTag.ToString()));
+		InputExecuteDelegate.Execute(FinalInputInfo);
 	}
 	GetWorld()->GetTimerManager().ClearTimer(FinalInputHandle);
+}
+
+void UAct_AbilitySystemComponent::OnInputFinal(const FAbilityInputInfo& InputInfo)
+{//TODO::进行对应内容的处理：
+	if (InputInfo.InputTag==ActTagContainer::InputRelaxAttack)
+	{
+		
+	}
+	if (InputInfo.InputTag==ActTagContainer::InputHeavyAttack)
+	{
+		
+	}
+	if (InputInfo.InputTag==ActTagContainer::Defense)
+	{
+		
+	}
+	if (InputInfo.InputTag==ActTagContainer::Rolling)
+	{
+		
+	}
 }
 
 
