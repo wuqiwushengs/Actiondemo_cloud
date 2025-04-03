@@ -30,8 +30,7 @@ void UAct_AbilitySystemComponent::BeginPlay()
 	{
 		AbilityChainManager->BeginConstruct(AbilityDataManager);
 	}
-	InputExecuteDelegate.BindUFunction(this,TEXT("InputExecuteDelegate"));
-	
+	InputExecuteDelegate.BindUFunction(this,TEXT("OnInputFinal"));
 	// ...
 	
 }
@@ -48,14 +47,22 @@ void UAct_AbilitySystemComponent::ProcessingInputDataStarted(const FInputActionI
 {  //获得当前所有输入的tag以及输入的世界时间
 	//处理输入缓存设置
 	float WordTime=ActionInstance.GetLastTriggeredWorldTime();
+	//TODO::设置线程锁判断，预输入开启线程的动画通知，变为normal状态时开启线程。
 	FAbilityInputInfo Abilityinfo(Inputag,WordTime,InputTagsInbuff.Num()<=0?0:WordTime-InputTagsInbuff[0].InputWordTime,InputDataAsset->GetAbilityInputDatabyTag(Inputag).InputType);
-	if (ChekcInputLengthToSetInputLock(Abilityinfo.InputIntervalTime,ActionInstance,InputDataAsset,Inputag)) InputTagsInbuff.Add(Abilityinfo);
-	//假如已经绑定了那就不再进行绑定
-	if (!FinalInputHandle.IsValid())
+	if (ChekcInputLengthToSetInputLock(Abilityinfo.InputIntervalTime,ActionInstance,InputDataAsset,Inputag))
 	{
-		GetWorld()->GetTimerManager().SetTimer(FinalInputHandle,this,&UAct_AbilitySystemComponent::CheckFinalInput,AbilityInputBuffTime,false);
+		InputTagsInbuff.Add(Abilityinfo);
 	}
-	
+	if (InputTagsInbuff.Num()==1&&!GetWorld()->GetTimerManager().IsTimerActive(FinalInputHandle))
+	{
+		GEngine->AddOnScreenDebugMessage(-1,1,FColor::Black,FString::Printf(TEXT("%f"),GetWorld()->GetTime().GetRealTimeSeconds()));
+		//假如已经绑定了那就不再进行绑定
+		int32 index=this->InputTagsInbuff.Num()-1;
+		FTimerDelegate FinalExecute;
+		FinalExecute.BindLambda([this,ActionInstance,InputDataAsset,index](){CheckFinalInput();SetInputLock(ActionInstance,InputDataAsset,this->InputTagsInbuff[index].InputTag);});
+		GetWorld()->GetTimerManager().SetTimer(FinalInputHandle,FinalExecute,AbilityInputBuffTime,false);
+	}
+
 }
 void UAct_AbilitySystemComponent::ProcessingInputDataTriggering(const FInputActionInstance& ActionInstance,FGameplayTag Inputag, UInputDataAsset* InputDataAsset)
 {
@@ -69,7 +76,6 @@ bool UAct_AbilitySystemComponent::ChekcInputLengthToSetInputLock(float InputLeng
 {//如果输入时间超过缓冲时间则设置输入锁。
 	if (InputLength>=AbilityInputBuffTime)
 	{
-		SetInputLock(ActionInstance,InputDataAsset,Inputtag);
 		return false;
 	}
 	return true;
@@ -102,17 +108,19 @@ bool UAct_AbilitySystemComponent::ExeAbilityInputInfo(const TArray<FAbilityInput
 	if (InputTagsBuff.Num()<=0) return false;
 	for (int index=0;FAbilityInputInfo InputInfo:InputTagsBuff)
 	{
-		if (ExeInputIndex==INDEX_NONE)	ExeInputIndex=index;
+		if (ExeInputIndex==INDEX_NONE)
+		{
+			ExeInputIndex=index;
+		}
+		
 		if (InputInfo.InputWeightType>InputTagsInbuff[ExeInputIndex].InputWeightType)
 		{
 			ExeInputIndex=index;
 		}
+		index++;
 	}
-	if (ExeInputIndex!=INDEX_NONE)
-	{	OutInputInfo=InputTagsInbuff[ExeInputIndex];
+		OutInputInfo=InputTagsInbuff[ExeInputIndex];
 		return true;
-	}
-	return  false;
 }
 
 void UAct_AbilitySystemComponent::CheckFinalInput()
@@ -121,13 +129,15 @@ void UAct_AbilitySystemComponent::CheckFinalInput()
 	FAbilityInputInfo FinalInputInfo;
 	if (ExeAbilityInputInfo(InputTagsInbuff,FinalInputInfo))
 	{
-		InputExecuteDelegate.Execute(FinalInputInfo);
+		GEngine->AddOnScreenDebugMessage(-1,1,FColor::Black,FString::Printf(TEXT("%f"),GetWorld()->GetTime().GetRealTimeSeconds()));
+ 		InputExecuteDelegate.Execute(FinalInputInfo);
 	}
 	GetWorld()->GetTimerManager().ClearTimer(FinalInputHandle);
 }
 
 void UAct_AbilitySystemComponent::OnInputFinal(const FAbilityInputInfo& InputInfo)
 {//TODO::进行对应内容的处理：
+	GEngine->AddOnScreenDebugMessage(-1,0.5,FColor::Red,FString::Printf(TEXT("%s"),*InputInfo.InputTag.ToString()));
 	if (InputInfo.InputTag==ActTagContainer::InputRelaxAttack)
 	{
 		
@@ -136,11 +146,11 @@ void UAct_AbilitySystemComponent::OnInputFinal(const FAbilityInputInfo& InputInf
 	{
 		
 	}
-	if (InputInfo.InputTag==ActTagContainer::Defense)
+	if (InputInfo.InputTag==ActTagContainer::InputDefense)
 	{
 		
 	}
-	if (InputInfo.InputTag==ActTagContainer::Rolling)
+	if (InputInfo.InputTag==ActTagContainer::InputRolling)
 	{
 		
 	}

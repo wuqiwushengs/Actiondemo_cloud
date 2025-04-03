@@ -11,13 +11,28 @@ void UAct_AbilityChainRoot::Serlize(const TArray<FAct_AbilityTypes>& AbilitTypes
 		if (RelaxData.Num() > 0 && RelaxData[0].AbilityList.StartsWith("X"))
 		{
 			PrimaryRelaxAbilityHead=NewObject<UAct_AbilityChainChildNode>();
-			PrimaryRelaxAbilityHead->initialNode(RelaxData[0],1);
+			for (FAct_AbilityTypes & Ability: RelaxData)
+			{
+				if (Ability.AbilityList.Len()==1&&!UAct_AbilityChainFunctionLibrary::CheckAbilityArrayHasContain(PrimaryRelaxAbilityHead->SelfAbilityType,Ability))
+				{
+					PrimaryRelaxAbilityHead->initialNode(Ability,1);
+				}
+			}
+			
 		}
 		if (HeavyData.Num() > 0 && HeavyData[0].AbilityList.StartsWith("Y"))
 		{
 			
 			PrimaryHeavyAbilityHead=NewObject<UAct_AbilityChainChildNode>();
-			PrimaryHeavyAbilityHead->initialNode(HeavyData[0],1);
+			for (FAct_AbilityTypes & Ability: HeavyData)
+			{
+				if (Ability.AbilityList.Len()==1&&!UAct_AbilityChainFunctionLibrary::CheckAbilityArrayHasContain(PrimaryHeavyAbilityHead->SelfAbilityType,Ability))
+				{
+					PrimaryHeavyAbilityHead->initialNode(Ability,1);
+				}
+				break;
+			}
+			
 		}
 	
 		AddChainAbility(RelaxData,PrimaryRelaxAbilityHead);
@@ -35,46 +50,60 @@ void UAct_AbilityChainRoot::AddChainAbility(const TArray<FAct_AbilityTypes>& Abi
 		FString CombatSequence=CurrentAbilityType.AbilityList;
 		if (CombatSequence.Len()==0) continue;
 		UAct_AbilityChainChildNode* CurrentNode=ChooesdChainNode;
-		for (int32 CharIndex=1;CharIndex<CombatSequence.Len();CharIndex++)
+		for (int32 CharIndex = 1; CharIndex < CombatSequence.Len(); CharIndex++)
 		{
-			TCHAR CurrentChar=CombatSequence[CharIndex];
-			EAttackType AttackType=(CurrentChar=='X')?EAttackType::RelaxAttack:EAttackType::HeavyAttack;
-			TObjectPtr<UAct_AbilityChainChildNode>& NextNode=(AttackType==EAttackType::RelaxAttack)?CurrentNode->NextRelaxAttack:CurrentNode->NextHeavyAttack;
+			TCHAR CurrentChar = CombatSequence[CharIndex];
+			// 判定攻击类型并获取对应的下一个节点
+			EAttackType AttackType = (CurrentChar == 'X') ? EAttackType::RelaxAttack : EAttackType::HeavyAttack;
+			TObjectPtr<UAct_AbilityChainChildNode>& NextNode = (AttackType == EAttackType::RelaxAttack) 
+				? CurrentNode->NextRelaxAttack 
+				: CurrentNode->NextHeavyAttack;
+
+			// 如果下一个节点为空，则创建并初始化
 			if (!NextNode)
 			{
-				NextNode=NewObject<UAct_AbilityChainChildNode>();
-				NextNode->initialNode(CurrentAbilityType,CharIndex+1);
+				NextNode = NewObject<UAct_AbilityChainChildNode>();
+				NextNode->initialNode(CurrentAbilityType, CharIndex + 1);
 			}
-			if (NextNode->length==CurrentAbilityType.AbilityList.Len() && !UAct_AbilityChainFunctionLibrary::CheckAbilityArrayHasContain(NextNode->SelfAbilityType,CurrentAbilityType))
+			// 确保当前能力类型不重复地添加到节点
+			if (NextNode->length == CurrentAbilityType.AbilityList.Len() &&
+				!UAct_AbilityChainFunctionLibrary::CheckAbilityArrayHasContain(NextNode->SelfAbilityType, CurrentAbilityType))
 			{
 				NextNode->SelfAbilityType.Add(CurrentAbilityType);
-					
 			}
-			CurrentNode=NextNode;
+
+			// 更新当前节点为下一个节点
+			CurrentNode = NextNode;
 		}
+
 		
 	}
 }
 #pragma endregion Act_AbilityChainRoot
 bool UAct_AbilityChainManager::ToNextNode(UAct_AbilityChainChildNode * CurrentNode,EAttackType AttackType,ECharacterUnAttackingState CurrentState)
 {
-	if (CurrentNode==nullptr||CurrentNode->SelfAbilityType[0].AttackingState!=CurrentState)
-	{   
-		TObjectPtr<UAct_AbilityChainChildNode> &TempNode=(AttackType==EAttackType::RelaxAttack)?this->AbilityChainsRoot.FindChecked(CurrentState)->PrimaryRelaxAbilityHead:this->AbilityChainsRoot.FindChecked(CurrentState)->PrimaryHeavyAbilityHead;
-		CurrentNode=TempNode;
-		if (CurrentNode)
-		{
-			return true;
-		}
-	}
-	if (TObjectPtr<UAct_AbilityChainChildNode> &TempNode=(AttackType==EAttackType::RelaxAttack)?CurrentNode->NextRelaxAttack:CurrentNode->NextHeavyAttack)
+	if (!CurrentNode || CurrentNode->SelfAbilityType[0].AttackingState != CurrentState)
 	{
-		CurrentNode=TempNode;
-		if (CurrentNode)
-		{
-			return true;
-		}
+		TObjectPtr<UAct_AbilityChainChildNode>& TempNode = (AttackType == EAttackType::RelaxAttack) 
+			? this->AbilityChainsRoot.FindChecked(CurrentState)->PrimaryRelaxAbilityHead 
+			: this->AbilityChainsRoot.FindChecked(CurrentState)->PrimaryHeavyAbilityHead;
+
+		CurrentNode = TempNode;
+		return CurrentNode != nullptr;
 	}
+
+	TObjectPtr<UAct_AbilityChainChildNode>& TempNode = (AttackType == EAttackType::RelaxAttack) 
+		? CurrentNode->NextRelaxAttack 
+		: CurrentNode->NextHeavyAttack;
+
+	if (TempNode)
+	{
+		CurrentNode = TempNode;
+		return true;
+	}
+
+	return false;
+
 	return false;
 }
 
@@ -87,27 +116,18 @@ bool UAct_AbilityChainManager::TurnToRoot()
 	}
 	return false;
 }
-
+//TODO::目前技能树系统已经大改，需要你检查一下是否需要再某些地方进行安全检查避免缺少某一状态的技能而导致崩溃
 void UAct_AbilityChainManager::BeginConstruct(const UAct_AbilityDatasManager* datas)
 {	TArray<ECharacterUnAttackingState> CharacterUnAttackingStates;
-	datas->AbilityData->AbilitiesContent.GetKeys(CharacterUnAttackingStates);
+	datas->AbilitySum.AbilityTypesRelaxHead.GetKeys(CharacterUnAttackingStates);
+	if(CharacterUnAttackingStates.Num()<=0) return;
 	for (ECharacterUnAttackingState State:CharacterUnAttackingStates)
 	{
 		UAct_AbilityChainRoot* Root=NewObject<UAct_AbilityChainRoot>();
 		Root->Serlize(datas->AbilitySum.AbilityTypesRelaxHead.Find(State)->AbilityTypes,datas->AbilitySum.AbilityTypesHeavyHead.Find(State)->AbilityTypes);
 		AbilityChainsRoot.Add(State,Root);
 	}
+	
 }
 
-FAct_AbilityTypes UAct_AbilityChainManager::GetCorrectAbilityFromArray(UAct_AbilityChainChildNode* Chain,ECharacterUnAttackingState AttackingState)
-{
-	checkf(Chain,TEXT("Can't  Find Chain"));
-	for (FAct_AbilityTypes& AbilityTypes:Chain->SelfAbilityType)
-	{
-		if (AbilityTypes.AttackingState==AttackingState)
-		{
-			return AbilityTypes;
-		}
-	}
-	return FAct_AbilityTypes();
-}
+

@@ -79,7 +79,7 @@ public:
 	bool InputLock;
 	//通过设置此数据来对输入进行开锁或闭锁
 	UPROPERTY(BlueprintReadWrite,EditDefaultsOnly)
-	float AbilityInputBuffTime=0.15;
+	float AbilityInputBuffTime=0.1f;
 	UFUNCTION()
 	void CheckFinalInput();
 	UPROPERTY()

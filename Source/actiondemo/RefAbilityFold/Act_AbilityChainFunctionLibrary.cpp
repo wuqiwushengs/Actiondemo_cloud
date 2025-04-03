@@ -8,13 +8,20 @@
 
 bool UAct_AbilityChainFunctionLibrary::CheckAbilityArrayHasContain(const TArray<FAct_AbilityTypes>& OwenTypes,FAct_AbilityTypes& CurrentType)
 {
+	if (OwenTypes.Num() == 0) return false;
 	for (FAct_AbilityTypes AbilityType : OwenTypes)
 	{
-		if (AbilityType.AttackingState==CurrentType.AttackingState)
+		if (CurrentType.OwnerRequiresTag.IsEmpty())
 		{
-			return true;
+			// 如果当前技能的标签为空，则只需检查已存在技能的标签是否也为空
+			return AbilityType.OwnerRequiresTag.IsEmpty();
 		}
-		continue;
+		else
+		{
+			// 如果当前技能的标签不为空，则检查已存在技能是否包含其所有标签
+			return AbilityType.OwnerRequiresTag.HasAll(CurrentType.OwnerRequiresTag);
+		}
+
 	}
 	
 	return false;

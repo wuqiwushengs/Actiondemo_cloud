@@ -20,11 +20,11 @@ void UAct_AbilityDatasManager::ClearAbilityData()
 
 TMap<ECharacterUnAttackingState,FAct_Abilities> UAct_AbilityDatasManager::LoadAbilityData()
 {	TMap<ECharacterUnAttackingState,FAct_Abilities> FinalAbilityTypes;
-	if (!AbilityData->AbilitiesContent.begin().Value()) return FinalAbilityTypes;
 	FAct_Abilities OneStateAbilities;
 	//循环每个数据随后读取，读取完成之后添加到final后将OneStateAbilities置空
 	for (TPair<ECharacterUnAttackingState,UDataTable*>& Data:AbilityData->AbilitiesContent)
 	{
+		if (!Data.Value) continue;
 		ECharacterUnAttackingState CurrentState=Data.Key;
 		TArray<FName> AbilitiesName=Data.Value->GetRowNames();
 		for (int i=0;i<AbilitiesName.Num();i++)
@@ -46,6 +46,7 @@ FAbilitySum UAct_AbilityDatasManager::LoadAbilitySum(TMap<ECharacterUnAttackingS
 		ECharacterUnAttackingState CurrentState=Data.Key;
 		FAct_Abilities CurrentRelaxAbility=FAct_Abilities();
 		FAct_Abilities CurrentHeavyAbility=FAct_Abilities();
+		if (Data.Value.AbilityTypes.Num()<=0) continue;
 		for (FAct_AbilityTypes & AbilityType :Data.Value.AbilityTypes)
 		{
 			TCHAR Value=AbilityType.GetAbilityListContentByIndex(0,false)[0];

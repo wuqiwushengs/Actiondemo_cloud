@@ -89,7 +89,5 @@ public:
 	//游戏开始时调用在AbilitySystemComponent中调用
 	UFUNCTION()
 	virtual void BeginConstruct(const UAct_AbilityDatasManager* datas);
-	UFUNCTION()
-	virtual FAct_AbilityTypes GetCorrectAbilityFromArray(UAct_AbilityChainChildNode * Chain,ECharacterUnAttackingState AttackingState=ECharacterUnAttackingState::Normal);
 
 };

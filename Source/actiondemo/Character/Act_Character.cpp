@@ -36,7 +36,14 @@ void AAct_Character::BeginPlay()
 // Called every frame
 void AAct_Character::Tick(float DeltaTime)
 {	Super::Tick(DeltaTime);
-	GEngine->AddOnScreenDebugMessage(-1,0.1,FColor::Black,FString::Printf(TEXT("%d"),GetAct_AbilitySystemComponent()->InputTagsInbuff.Num()));
+	if (GetAct_AbilitySystemComponent()->InputTagsInbuff.Num()>0)
+	{
+		for (int i=0;i<GetAct_AbilitySystemComponent()->InputTagsInbuff.Num();i++)
+		{
+			GEngine->AddOnScreenDebugMessage(-1,0.1,FColor::Black,FString::Printf(TEXT("%s"),*GetAct_AbilitySystemComponent()->InputTagsInbuff[i].InputTag.ToString()));
+		}
+	}
+	
 }
 
 UAbilitySystemComponent* AAct_Character::GetAbilitySystemComponent() const 
