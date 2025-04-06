@@ -56,6 +56,11 @@ UAct_AbilitySystemComponent* AAct_Character::GetAct_AbilitySystemComponent() con
 	return ActAbilitySystemComponent;
 }
 
+ECharacterUnAttackingState AAct_Character::GetCharacterUnAttackingState_Implementation()
+{
+	return CharacterUnAttackingState;
+}
+
 
 // Called to bind functionality to input
 void AAct_Character::SetupPlayerInputComponent(UInputComponent* PlayerInputComponent)
@@ -103,10 +108,6 @@ void AAct_Character::BindSkill(const FInputActionInstance& ActionInstance, FGame
 		if (ActionInstance.GetTriggerEvent()==ETriggerEvent::Started)
 		{
 			GetAct_AbilitySystemComponent()->ProcessingInputDataStarted(ActionInstance,Inputag,InputDataAsset);
-		}
-		if (ActionInstance.GetTriggerEvent()==ETriggerEvent::Triggered)
-		{
-			GetAct_AbilitySystemComponent()->ProcessingInputDataTriggering(ActionInstance,Inputag,InputDataAsset);
 		}
 		if (ActionInstance.GetTriggerEvent()==ETriggerEvent::Completed)
 		{

@@ -104,7 +104,6 @@ bool UAct_AbilityChainManager::ToNextNode(UAct_AbilityChainChildNode * CurrentNo
 
 	return false;
 
-	return false;
 }
 
 bool UAct_AbilityChainManager::TurnToRoot()

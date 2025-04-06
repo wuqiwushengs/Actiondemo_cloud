@@ -21,14 +21,10 @@ struct FInputData
 	UPROPERTY(EditAnywhere,BlueprintReadWrite,Category="Input")
 	UInputAction * InputAction;
 	UPROPERTY(EditAnywhere,BlueprintReadWrite,Category="Input")
-	bool CanbeHold;
-	UPROPERTY(EditAnywhere,BlueprintReadWrite,Category="Input")
 	bool bAbilityInput;
 	//只有当是技能时才能打开设置
 	UPROPERTY(EditAnywhere,BlueprintReadWrite,Category="Input",meta=(EditCondition="bAbilityInput"))
 	EInputWeightType InputType;
-	UPROPERTY(EditAnywhere,BlueprintReadWrite,Category="Input",meta=(EditCondition="bAbilityInput"))
-	bool bDestoryInputBuffer=false;
 };
 UCLASS()
 class ACTIONDEMO_API UInputDataAsset : public UPrimaryDataAsset

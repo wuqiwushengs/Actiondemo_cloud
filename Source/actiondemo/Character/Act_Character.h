@@ -4,6 +4,7 @@
 
 #include "CoreMinimal.h"
 #include "AbilitySystemInterface.h"
+#include "CharacterInferface.h"
 #include "InputAction.h"
 #include "actiondemo/Act_TagContainer.h"
 #include "actiondemo/InputDataAsset.h"
@@ -16,7 +17,7 @@ class UCameraComponent;
 class USpringArmComponent;
 
 UCLASS()
-class ACTIONDEMO_API AAct_Character : public ACharacter,public IAbilitySystemInterface
+class ACTIONDEMO_API AAct_Character : public ACharacter,public IAbilitySystemInterface,public ICharacterInferface
 {
 	GENERATED_BODY()
 
@@ -35,7 +36,9 @@ public:
 	virtual UAbilitySystemComponent* GetAbilitySystemComponent()  const override;
 	//AbilityInterface End
 	FORCEINLINE UAct_AbilitySystemComponent * GetAct_AbilitySystemComponent()  const  ;
-	
+	//Character Interface Start
+	virtual ECharacterUnAttackingState GetCharacterUnAttackingState_Implementation() override;
+	//Character Interface End
 	//CameraInit(temp)
 	//@TODO:CreateCameraSystem;
 	UPROPERTY(EditDefaultsOnly,BlueprintReadWrite,Category="Camera")

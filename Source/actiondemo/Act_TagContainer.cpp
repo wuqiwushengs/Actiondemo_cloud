@@ -14,5 +14,7 @@ namespace ActTagContainer
 	ACTIONDEMO_API UE_DEFINE_GAMEPLAY_TAG(HeavyAttack,"AttackStatement.Attack.Ability.HeavyAttack")
 	ACTIONDEMO_API UE_DEFINE_GAMEPLAY_TAG(Defense,"AttackStatement.Attack.Ability.Defense")
 	ACTIONDEMO_API UE_DEFINE_GAMEPLAY_TAG(Rolling,"AttackStatement.Attack.Ability.Rolling")
+	ACTIONDEMO_API UE_DEFINE_GAMEPLAY_TAG(Pressed,"Input.Pressed");
+	ACTIONDEMO_API UE_DEFINE_GAMEPLAY_TAG(Released,"Input.Released");
 	
 }

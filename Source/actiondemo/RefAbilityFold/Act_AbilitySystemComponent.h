@@ -58,8 +58,6 @@ public:
 	UFUNCTION(BlueprintCallable, Category="InputDeal")
 	void ProcessingInputDataStarted(const FInputActionInstance& ActionInstance,FGameplayTag Inputag, UInputDataAsset * InputDataAsset);
 	UFUNCTION(BlueprintCallable, Category="InputDeal")
-	void ProcessingInputDataTriggering(const FInputActionInstance& ActionInstance,FGameplayTag Inputag, UInputDataAsset * InputDataAsset);
-	UFUNCTION(BlueprintCallable, Category="InputDeal")
 	void ProcessingInputDataComplete(const FInputActionInstance& ActionInstance,FGameplayTag Inputag, UInputDataAsset * InputDataAsset);
 	//InputLockFunction
 	//仅仅用在输入时
@@ -100,4 +98,7 @@ public:
 	//技能树文件
 	UPROPERTY(EditDefaultsOnly,BlueprintReadWrite)
 	TObjectPtr<UAct_AbilityChainManager> AbilityChainManager;
+	//用于蓄力技能在松开按键时结束
+	UPROPERTY()
+	TMap<FGameplayTag,FGameplayAbilitySpecHandle> HoldAbilityHandle;
 };

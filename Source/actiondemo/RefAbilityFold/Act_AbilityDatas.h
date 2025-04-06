@@ -20,8 +20,12 @@ public:
 	//仅限放入Act_AbilityTypes的内容，要注意每个位置只能放置一个x或Y不能出现 xx xx重复出现的情况
 	UPROPERTY(EditDefaultsOnly,BlueprintReadWrite,Category="AbilitiesContent")
 	TMap<ECharacterUnAttackingState,UDataTable*>AbilitiesContent;
-	
-	
+	//各种其他类型非连招的Act_AbilityTypes的内容
+	UPROPERTY(EditDefaultsOnly,BlueprintReadWrite,Category="AbilitiesContent")
+	UDataTable* AbilitiesNotInComboChain;
+	//TODO::写读取内容的函数
+	UFUNCTION()
+	FAct_AbilityTypes GetAbilityTypesNotInComboChainByTag(FGameplayTag InputTag);
 };
 
 USTRUCT()

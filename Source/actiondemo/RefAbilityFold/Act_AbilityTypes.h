@@ -17,6 +17,8 @@ public:
 	TSubclassOf<UAct_Ability> Ability;
 	UPROPERTY(EditDefaultsOnly)
 	ECharacterUnAttackingState AttackingState=ECharacterUnAttackingState::Normal;
+	UPROPERTY()
+	bool CanbeHold;
 	//对应的输入tag(Relax OR heavy)
 	UPROPERTY(EditDefaultsOnly)
 	FGameplayTag InputTag;

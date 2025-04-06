@@ -3,6 +3,8 @@
 
 #include "Act_AbilitySystemComponent.h"
 
+#include "AbilitySystemBlueprintLibrary.h"
+#include "actiondemo/Character/CharacterInferface.h"
 
 
 // Sets default values for this component's properties
@@ -55,7 +57,6 @@ void UAct_AbilitySystemComponent::ProcessingInputDataStarted(const FInputActionI
 	}
 	if (InputTagsInbuff.Num()==1&&!GetWorld()->GetTimerManager().IsTimerActive(FinalInputHandle))
 	{
-		GEngine->AddOnScreenDebugMessage(-1,1,FColor::Black,FString::Printf(TEXT("%f"),GetWorld()->GetTime().GetRealTimeSeconds()));
 		//假如已经绑定了那就不再进行绑定
 		int32 index=this->InputTagsInbuff.Num()-1;
 		FTimerDelegate FinalExecute;
@@ -64,12 +65,22 @@ void UAct_AbilitySystemComponent::ProcessingInputDataStarted(const FInputActionI
 	}
 
 }
-void UAct_AbilitySystemComponent::ProcessingInputDataTriggering(const FInputActionInstance& ActionInstance,FGameplayTag Inputag, UInputDataAsset* InputDataAsset)
-{
-}
-
 void UAct_AbilitySystemComponent::ProcessingInputDataComplete(const FInputActionInstance& ActionInstance,FGameplayTag Inputag, UInputDataAsset* InputDataAsset)
-{
+{	//检查获取取消键的技能的委托并且释放。保证不会因为一个导致其他的技能被释放
+	FInputData InputData=InputDataAsset->GetAbilityInputDatabyTag(Inputag);
+	if (HoldAbilityHandle[InputData.InputTag].IsValid())
+	{
+		FGameplayAbilitySpecHandle ReleasedHandle=HoldAbilityHandle[InputData.InputTag];
+		bool BInstance=false;
+		const UAct_Ability * Ability=CastChecked<UAct_Ability>(UAbilitySystemBlueprintLibrary::GetGameplayAbilityFromSpecHandle(this,ReleasedHandle,BInstance));
+		if (BInstance)
+		{
+			Ability->OnPressedDelegate.Broadcast();
+		}
+	}
+	
+	
+	
 }
 
 bool UAct_AbilitySystemComponent::ChekcInputLengthToSetInputLock(float InputLength,const FInputActionInstance & ActionInstance,UInputDataAsset *InputDataAsset,FGameplayTag Inputtag)
@@ -129,7 +140,6 @@ void UAct_AbilitySystemComponent::CheckFinalInput()
 	FAbilityInputInfo FinalInputInfo;
 	if (ExeAbilityInputInfo(InputTagsInbuff,FinalInputInfo))
 	{
-		GEngine->AddOnScreenDebugMessage(-1,1,FColor::Black,FString::Printf(TEXT("%f"),GetWorld()->GetTime().GetRealTimeSeconds()));
  		InputExecuteDelegate.Execute(FinalInputInfo);
 	}
 	GetWorld()->GetTimerManager().ClearTimer(FinalInputHandle);
@@ -137,22 +147,25 @@ void UAct_AbilitySystemComponent::CheckFinalInput()
 
 void UAct_AbilitySystemComponent::OnInputFinal(const FAbilityInputInfo& InputInfo)
 {//TODO::进行对应内容的处理：
-	GEngine->AddOnScreenDebugMessage(-1,0.5,FColor::Red,FString::Printf(TEXT("%s"),*InputInfo.InputTag.ToString()));
+	
 	if (InputInfo.InputTag==ActTagContainer::InputRelaxAttack)
-	{
+	{	
+		AbilityChainManager->ToNextNode(AbilityChainManager->SelectedNode,EAttackType::RelaxAttack,ICharacterInferface::Execute_GetCharacterUnAttackingState(GetOwner()));
 		
 	}
 	if (InputInfo.InputTag==ActTagContainer::InputHeavyAttack)
 	{
-		
+		AbilityChainManager->ToNextNode(AbilityChainManager->SelectedNode,EAttackType::HeavyAttack,ICharacterInferface::Execute_GetCharacterUnAttackingState(GetOwner()));
 	}
 	if (InputInfo.InputTag==ActTagContainer::InputDefense)
 	{
-		
+		//激活防御技能
+		AbilityDataManager->AbilityData->GetAbilityTypesNotInComboChainByTag(ActTagContainer::InputDefense);
 	}
 	if (InputInfo.InputTag==ActTagContainer::InputRolling)
 	{
-		
+		//激活翻滚技能
+		AbilityDataManager->AbilityData->GetAbilityTypesNotInComboChainByTag(ActTagContainer::InputRolling);
 	}
 }
 

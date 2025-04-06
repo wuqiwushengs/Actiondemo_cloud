@@ -3,10 +3,24 @@
 
 #include "Act_AbilityDatas.h"
 
-#define RelaxAttackName TEXT("X")
-#define HeavyAttackName TEXT("Y")
+#define RELAXATTACKNAME TEXT("X")
+#define HEAVYATTACKNAME TEXT("Y")
 
 
+FAct_AbilityTypes UAct_AbilityDatas::GetAbilityTypesNotInComboChainByTag(FGameplayTag InputTag)
+{
+	if(!AbilitiesNotInComboChain) return FAct_AbilityTypes();
+	for(FName RowName:AbilitiesNotInComboChain->GetRowNames())
+	{
+		FString Msg=FString::Printf(TEXT("Can't find %s"),*RowName.ToString());
+		FAct_AbilityTypes AbilityType=*AbilitiesNotInComboChain->FindRow<FAct_AbilityTypes>(RowName,Msg);
+		if (AbilityType.InputTag==InputTag)
+		{
+			return AbilityType;
+		}
+	}
+	return FAct_AbilityTypes();
+}
 
 void UAct_AbilityDatasManager::init()
 {	ClearAbilityData();
@@ -52,13 +66,13 @@ FAbilitySum UAct_AbilityDatasManager::LoadAbilitySum(TMap<ECharacterUnAttackingS
 			TCHAR Value=AbilityType.GetAbilityListContentByIndex(0,false)[0];
 			FString ValueStr;
 			ValueStr.AppendChar(Value);
-			if (ValueStr==RelaxAttackName)
+			if (ValueStr==RELAXATTACKNAME)
 			{
 				CurrentRelaxAbility.AbilityTypes.Add(AbilityType);
 				
 			
 			}
-			if (ValueStr==HeavyAttackName)
+			if (ValueStr==HEAVYATTACKNAME)
 			{
 				
 				CurrentHeavyAbility.AbilityTypes.Add(AbilityType);
