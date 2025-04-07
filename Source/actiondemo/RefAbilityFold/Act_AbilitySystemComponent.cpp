@@ -2,24 +2,20 @@
 
 
 #include "Act_AbilitySystemComponent.h"
-
+#include "actiondemo/InputDataAsset.h"
 #include "AbilitySystemBlueprintLibrary.h"
+#include "Abilities/Tasks/AbilityTask_WaitGameplayTagBase.h"
 #include "actiondemo/Character/CharacterInferface.h"
 
 
-// Sets default values for this component's properties
 UAct_AbilitySystemComponent::UAct_AbilitySystemComponent()
 {
-	// Set this component to be initialized when the game starts, and to be ticked every frame.  You can turn these features
-	// off to improve performance if you don't need them.
 	PrimaryComponentTick.bCanEverTick = true;
-	InputLock=false;
+	CurrentInputType=InputState::NormalInputState;
 	//初始化
 	AbilityDataManager=CreateDefaultSubobject<UAct_AbilityDatasManager>("AbilityData");
 	AbilityChainManager=CreateDefaultSubobject<UAct_AbilityChainManager>("AbilityChainManager");
-	// ...
 }
-// Called when the game starts
 void UAct_AbilitySystemComponent::BeginPlay()
 {
 	Super::BeginPlay();
@@ -30,49 +26,78 @@ void UAct_AbilitySystemComponent::BeginPlay()
 	}
 	if (AbilityChainManager)
 	{
-		AbilityChainManager->BeginConstruct(AbilityDataManager);
+		AbilityChainManager->BeginConstruct(AbilityDataManager,this);
 	}
+	//绑定输入执行函数
 	InputExecuteDelegate.BindUFunction(this,TEXT("OnInputFinal"));
-	// ...
-	
-}
-void UAct_AbilitySystemComponent::TickComponent(float DeltaTime, enum ELevelTick TickType,FActorComponentTickFunction* ThisTickFunction)
-{
-	Super::TickComponent(DeltaTime, TickType, ThisTickFunction);
-}
-void UAct_AbilitySystemComponent::EndPlay(const EEndPlayReason::Type EndPlayReason)
-{
-	Super::EndPlay(EndPlayReason);
-	
+	this->RegisterGameplayTagEvent(ActTagContainer::ExePreInputRelaxAttack,EGameplayTagEventType::NewOrRemoved);
 }
 void UAct_AbilitySystemComponent::ProcessingInputDataStarted(const FInputActionInstance& ActionInstance,FGameplayTag Inputag, UInputDataAsset* InputDataAsset)
-{  //获得当前所有输入的tag以及输入的世界时间
-	//处理输入缓存设置
+{
+	FInputData InputData=InputDataAsset->GetAbilityInputDatabyTag(Inputag);
 	float WordTime=ActionInstance.GetLastTriggeredWorldTime();
-	//TODO::设置线程锁判断，预输入开启线程的动画通知，变为normal状态时开启线程。
-	FAbilityInputInfo Abilityinfo(Inputag,WordTime,InputTagsInbuff.Num()<=0?0:WordTime-InputTagsInbuff[0].InputWordTime,InputDataAsset->GetAbilityInputDatabyTag(Inputag).InputType);
-	if (ChekcInputLengthToSetInputLock(Abilityinfo.InputIntervalTime,ActionInstance,InputDataAsset,Inputag))
+	
+	//检测当前是预输入阶段还是普通输入阶段，如果是预输入阶段那么就走下面，如果是普通输入阶段则走下面这一段。
+	switch (CurrentInputType)
 	{
-		InputTagsInbuff.Add(Abilityinfo);
+	case  InputState::PreInputState:
+		{
+			FAbilityInputInfo Abilityinfo(Inputag,WordTime,InputTagsInbuff.Num()<=0?0:WordTime-InputTagsInbuff[0].InputWordTime,InputData.InputType);
+			InputTagsInbuff.Add(Abilityinfo);
+			if (this->GetOwnedGameplayTags().HasTag(ActTagContainer::ExePreInputRelaxAttack))
+			{
+				//如果当前的输入tag是预输入阶段的tag那么就直接返回
+				FAbilityInputInfo FinalInputInfo;
+				if (ExeAbilityInputInfo(InputTagsInbuff,FinalInputInfo))
+				{
+					InputExecuteDelegate.Execute(FinalInputInfo);
+				}
+				CurrentInputType=InputState::DisableInputState;
+				InputTagsInbuff.Empty();
+			}
+			break;
+		}
+	case InputState::NormalInputState:
+		{
+			FAbilityInputInfo Abilityinfo(Inputag,WordTime,InputTagsInbuff.Num()<=0?0:WordTime-InputTagsInbuff[0].InputWordTime,InputDataAsset->GetAbilityInputDatabyTag(Inputag).InputType);
+			if (ChekcInputLengthToSetInputLock(Abilityinfo.InputIntervalTime,ActionInstance,InputDataAsset,Inputag))
+			{
+				InputTagsInbuff.Add(Abilityinfo);
+			}
+			if (InputTagsInbuff.Num()==1&&!GetWorld()->GetTimerManager().IsTimerActive(FinalInputHandle))
+			{
+				//假如已经绑定了那就不再进行绑定
+				int32 index=this->InputTagsInbuff.Num()-1;
+				FTimerDelegate FinalExecute;
+				FinalExecute.BindLambda([this,ActionInstance,InputDataAsset,index](){CheckFinalInput();SetInputLock(ActionInstance,InputDataAsset,this->InputTagsInbuff[index].InputTag);});
+				GetWorld()->GetTimerManager().SetTimer(FinalInputHandle,FinalExecute,AbilityInputBuffTime,false);
+			}
+			break;
+		}
 	}
-	if (InputTagsInbuff.Num()==1&&!GetWorld()->GetTimerManager().IsTimerActive(FinalInputHandle))
-	{
-		//假如已经绑定了那就不再进行绑定
-		int32 index=this->InputTagsInbuff.Num()-1;
-		FTimerDelegate FinalExecute;
-		FinalExecute.BindLambda([this,ActionInstance,InputDataAsset,index](){CheckFinalInput();SetInputLock(ActionInstance,InputDataAsset,this->InputTagsInbuff[index].InputTag);});
-		GetWorld()->GetTimerManager().SetTimer(FinalInputHandle,FinalExecute,AbilityInputBuffTime,false);
-	}
-
 }
 void UAct_AbilitySystemComponent::ProcessingInputDataComplete(const FInputActionInstance& ActionInstance,FGameplayTag Inputag, UInputDataAsset* InputDataAsset)
 {	//检查获取取消键的技能的委托并且释放。保证不会因为一个导致其他的技能被释放
+	FAct_AbilityTypes NotInComboSkill;
+	FGameplayAbilitySpecHandle Handle;
 	FInputData InputData=InputDataAsset->GetAbilityInputDatabyTag(Inputag);
-	if (HoldAbilityHandle[InputData.InputTag].IsValid())
+	if (InputData.bCanHold&&AbilityChainManager->UnComboHandle.Find(Inputag)->IsValid())
 	{
-		FGameplayAbilitySpecHandle ReleasedHandle=HoldAbilityHandle[InputData.InputTag];
+		Handle=*AbilityChainManager->UnComboHandle.Find(Inputag);
+		check(Handle.IsValid());
 		bool BInstance=false;
-		const UAct_Ability * Ability=CastChecked<UAct_Ability>(UAbilitySystemBlueprintLibrary::GetGameplayAbilityFromSpecHandle(this,ReleasedHandle,BInstance));
+		const UAct_Ability * Ability=CastChecked<UAct_Ability>(UAbilitySystemBlueprintLibrary::GetGameplayAbilityFromSpecHandle(this,Handle,BInstance));
+		if (BInstance)
+		{
+			Ability->OnPressedDelegate.Broadcast();
+		}
+	}
+	if (InputData.bCanHold&&AbilityChainManager->CurrentAbilityType.InputTag==Inputag)
+	{
+		Handle=AbilityChainManager->CurrentAbilityType.Handle;
+		check(Handle.IsValid());
+		bool BInstance=false;
+		const UAct_Ability * Ability=CastChecked<UAct_Ability>(UAbilitySystemBlueprintLibrary::GetGameplayAbilityFromSpecHandle(this,Handle,BInstance));
 		if (BInstance)
 		{
 			Ability->OnPressedDelegate.Broadcast();
@@ -81,6 +106,25 @@ void UAct_AbilitySystemComponent::ProcessingInputDataComplete(const FInputAction
 	
 	
 	
+}
+
+void UAct_AbilitySystemComponent::ProcessingInputDataTrigger(const FInputActionInstance& ActionInstance,
+	FGameplayTag Inputag, UInputDataAsset* InputDataAsset)
+{
+	FInputData InputData=InputDataAsset->GetAbilityInputDatabyTag(Inputag);
+	FAct_AbilityTypes NotInComboSkill;
+	FGameplayAbilitySpecHandle Handle;
+	Handle=*AbilityChainManager->UnComboHandle.Find(Inputag);
+	if (Handle.IsValid())
+    {
+        check(Handle.IsValid());
+        bool BInstance=false;
+        const UAct_Ability * Ability=CastChecked<UAct_Ability>(UAbilitySystemBlueprintLibrary::GetGameplayAbilityFromSpecHandle(this,Handle,BInstance));
+        if (BInstance)
+        {
+            Ability;
+        }
+    }
 }
 
 bool UAct_AbilitySystemComponent::ChekcInputLengthToSetInputLock(float InputLength,const FInputActionInstance & ActionInstance,UInputDataAsset *InputDataAsset,FGameplayTag Inputtag)
@@ -94,7 +138,7 @@ bool UAct_AbilitySystemComponent::ChekcInputLengthToSetInputLock(float InputLeng
 
 void UAct_AbilitySystemComponent::SetInputLock(const FInputActionInstance & ActionInstance,UInputDataAsset *InputDataAsset,FGameplayTag Inputtag)
 {
-	InputLock=true;
+	CurrentInputType=InputState::DisableInputState;
 	InputTagsInbuff.Empty();
 	if (InputLockDelegate.IsBound())
 	{
@@ -103,12 +147,12 @@ void UAct_AbilitySystemComponent::SetInputLock(const FInputActionInstance & Acti
 	
 }
 
-void UAct_AbilitySystemComponent::SetInputUnlock(const FInputActionInstance& ActionInstance,UInputDataAsset* InputDataAsset,FGameplayTag Inputtag)
+void UAct_AbilitySystemComponent::SetInputUnlock()
 {
-	InputLock=false;
+	CurrentInputType=InputState::NormalInputState;
 	if (InputLockDelegate.IsBound())
 	{
-		InputUnlockDelegate.Execute(ActionInstance,InputDataAsset,Inputtag);
+		InputUnlockDelegate.Execute();
 	}
 	
 }
@@ -160,12 +204,36 @@ void UAct_AbilitySystemComponent::OnInputFinal(const FAbilityInputInfo& InputInf
 	if (InputInfo.InputTag==ActTagContainer::InputDefense)
 	{
 		//激活防御技能
-		AbilityDataManager->AbilityData->GetAbilityTypesNotInComboChainByTag(ActTagContainer::InputDefense);
+		FAct_AbilityTypes DefenseAbility;
+		if (DefenseAbility.InputTag.IsValid()&&AbilityDataManager->AbilityData->GetAbilityTypesNotInComboChainByTag(ActTagContainer::InputDefense,DefenseAbility))
+		{
+			this->TryActivateAbilityByClass(DefenseAbility.Ability);
+		}
 	}
 	if (InputInfo.InputTag==ActTagContainer::InputRolling)
 	{
 		//激活翻滚技能
-		AbilityDataManager->AbilityData->GetAbilityTypesNotInComboChainByTag(ActTagContainer::InputRolling);
+		FAct_AbilityTypes RollingAbility;
+		if (RollingAbility.InputTag.IsValid()&&AbilityDataManager->AbilityData->GetAbilityTypesNotInComboChainByTag(ActTagContainer::InputRolling,RollingAbility))
+		{
+			this->TryActivateAbilityByClass(RollingAbility.Ability);
+		}
+	}
+}
+
+void UAct_AbilitySystemComponent::OnPreSkillExecute(const FGameplayTag ExeTag, int32 count)
+{	//假如当前的技能预输入数量小于等于0那么就直接返回
+	if (InputTagsInbuff.Num()<=0) return ;
+	if (count>=1&&ExeTag==ActTagContainer::ExePreInputRelaxAttack)
+	{
+		//如果计数>=1说明进入了执行预输入阶段。
+		FAbilityInputInfo FinalInputInfo;
+		if(ExeAbilityInputInfo(InputTagsInbuff,FinalInputInfo))
+		{
+			InputExecuteDelegate.Execute(FinalInputInfo);
+		}
+		CurrentInputType=InputState::DisableInputState;
+		InputTagsInbuff.Empty();
 	}
 }
 

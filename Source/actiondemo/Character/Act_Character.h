@@ -38,6 +38,7 @@ public:
 	FORCEINLINE UAct_AbilitySystemComponent * GetAct_AbilitySystemComponent()  const  ;
 	//Character Interface Start
 	virtual ECharacterUnAttackingState GetCharacterUnAttackingState_Implementation() override;
+	virtual UInputDataAsset* GetCharacterInputData_Implementation() override;
 	//Character Interface End
 	//CameraInit(temp)
 	//@TODO:CreateCameraSystem;

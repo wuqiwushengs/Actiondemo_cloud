@@ -6,8 +6,7 @@
 #include "Act_AbilityTypes.h"
 #include "actiondemo/Act_TagContainer.h"
 #include "Act_AbilityChain.generated.h"
-
-
+class UAct_AbilitySystemComponent;
 class UAct_AbilityChainFunctionLibrary;
 
 UENUM(BlueprintType)
@@ -41,14 +40,12 @@ public:
 			
 		}
 		return false;
-		
 	}
-	void initialNode(const FAct_AbilityTypes &  AbilityTypes,int32 lengths)
-	{
-		
-		SelfAbilityType.Add(AbilityTypes);
-		length=lengths;
-	}
+	//初始化并且对内部进行排序
+	void initialNode(FAct_AbilityTypes &  AbilityTypes,int32 lengths,UAct_AbilitySystemComponent*AbilitySystemComponent);
+//用来检查该节点正确的技能
+	bool  CheckCorrectAbilityTypes(const UAct_AbilitySystemComponent * AbilitySystemComponent,FAct_AbilityTypes &AbilityTypes) const;
+   bool OnGameplayChainIn(UAct_AbilitySystemComponent * AbilitySystemComponent);
 };
 //作为技能树来设置
 UCLASS()
@@ -56,9 +53,8 @@ class  ACTIONDEMO_API UAct_AbilityChainRoot:public UObject
 {	GENERATED_BODY()
 public:
 	//初始化基础内容
-	void Serlize(const TArray<FAct_AbilityTypes>& AbilitTypesRelaxHead,const TArray<FAct_AbilityTypes>&AbilitTypesHeavyHead);
-	
-	virtual void AddChainAbility(const TArray<FAct_AbilityTypes>& AbilityDatas,UAct_AbilityChainChildNode* ChooesdChainNode);
+	void Serlize(const TArray<FAct_AbilityTypes>& AbilitTypesRelaxHead,const TArray<FAct_AbilityTypes>&AbilitTypesHeavyHead,UAct_AbilitySystemComponent*AbilitySystemComponent);
+	virtual void AddChainAbility(const TArray<FAct_AbilityTypes>& AbilityDatas,UAct_AbilityChainChildNode* ChooesdChainNode,UAct_AbilitySystemComponent * AbilitySystemComponent);
 public:
 	UPROPERTY()
 	TObjectPtr<UAct_AbilityChainChildNode> PrimaryRelaxAbilityHead=nullptr;
@@ -74,20 +70,26 @@ public:
 	//链表内容
 	UPROPERTY()
 	TMap<ECharacterUnAttackingState,UAct_AbilityChainRoot*> AbilityChainsRoot;
+	UPROPERTY()
+	TMap<FGameplayTag,FGameplayAbilitySpecHandle> UnComboHandle;
 	//指向被选择分支的指针
 	UPROPERTY()
 	UAct_AbilityChainChildNode * SelectedNode;
+	UPROPERTY()
+	FAct_AbilityTypes CurrentAbilityType;
 	//后面在角色那里绑一个函数
 	UPROPERTY()
 	ECharacterUnAttackingState CurrentAbilityState;
+	//获取AbilitSystemCompoent
+	UPROPERTY()
+	TObjectPtr<UAct_AbilitySystemComponent> AbilitySystemComponent;
 	//将分支传去下一个支
-	//TODO::当不同情况下到某个位置时的技能，需要在AbilityType中放置一个技能数组，并且能够在序列化时向技能数组中放置并且能够排除一些枚举相同的技能比如当我都是在翻滚时按x 有两个翻滚时按x则只收录一个。
 	UFUNCTION()
 	virtual bool ToNextNode(UAct_AbilityChainChildNode * CurrentNode,EAttackType AttackType=EAttackType::RelaxAttack,ECharacterUnAttackingState CurrentState=ECharacterUnAttackingState::Normal);
 	UFUNCTION()
 	virtual bool TurnToRoot();
 	//游戏开始时调用在AbilitySystemComponent中调用
 	UFUNCTION()
-	virtual void BeginConstruct(const UAct_AbilityDatasManager* datas);
+	virtual void BeginConstruct(const UAct_AbilityDatasManager* datas,UAct_AbilitySystemComponent *Act_AbilitySystemComponent);
 
 };

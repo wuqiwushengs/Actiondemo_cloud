@@ -61,6 +61,11 @@ ECharacterUnAttackingState AAct_Character::GetCharacterUnAttackingState_Implemen
 	return CharacterUnAttackingState;
 }
 
+UInputDataAsset* AAct_Character::GetCharacterInputData_Implementation()
+{
+	return InputDataAsset;
+}
+
 
 // Called to bind functionality to input
 void AAct_Character::SetupPlayerInputComponent(UInputComponent* PlayerInputComponent)
@@ -112,6 +117,10 @@ void AAct_Character::BindSkill(const FInputActionInstance& ActionInstance, FGame
 		if (ActionInstance.GetTriggerEvent()==ETriggerEvent::Completed)
 		{
 			GetAct_AbilitySystemComponent()->ProcessingInputDataComplete(ActionInstance,Inputag,InputDataAsset);
+		}
+		if (ActionInstance.GetTriggerEvent()==ETriggerEvent::Triggered)
+		{
+			GetAct_AbilitySystemComponent()->ProcessingInputDataTrigger(ActionInstance,Inputag,InputDataAsset);
 		}
 	}
 	

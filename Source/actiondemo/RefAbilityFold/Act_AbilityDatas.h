@@ -25,7 +25,7 @@ public:
 	UDataTable* AbilitiesNotInComboChain;
 	//TODO::写读取内容的函数
 	UFUNCTION()
-	FAct_AbilityTypes GetAbilityTypesNotInComboChainByTag(FGameplayTag InputTag);
+	bool GetAbilityTypesNotInComboChainByTag(FGameplayTag InputTag,FAct_AbilityTypes &Ability);
 };
 
 USTRUCT()

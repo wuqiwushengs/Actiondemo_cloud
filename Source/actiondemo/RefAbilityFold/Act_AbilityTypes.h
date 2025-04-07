@@ -17,8 +17,6 @@ public:
 	TSubclassOf<UAct_Ability> Ability;
 	UPROPERTY(EditDefaultsOnly)
 	ECharacterUnAttackingState AttackingState=ECharacterUnAttackingState::Normal;
-	UPROPERTY()
-	bool CanbeHold;
 	//对应的输入tag(Relax OR heavy)
 	UPROPERTY(EditDefaultsOnly)
 	FGameplayTag InputTag;
@@ -28,6 +26,8 @@ public:
 	//这个技能使用时需要有什么tag比如在地上的时候 用前x和原地x的攻击不同
 	UPROPERTY(EditDefaultsOnly)
 	FGameplayTagContainer OwnerRequiresTag;
+	UPROPERTY()
+	FGameplayAbilitySpecHandle Handle;
 	//获取技能的长度
 	int32 GetAbilityListSize();
 	//获取技能的内容通过索引

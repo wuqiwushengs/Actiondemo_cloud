@@ -26,4 +26,7 @@ public:
 	UFUNCTION(BlueprintNativeEvent)
 	ECharacterUnAttackingState GetCharacterUnAttackingState();
 	virtual ECharacterUnAttackingState GetCharacterUnAttackingState_Implementation()=0;
+	UFUNCTION(BlueprintNativeEvent)
+	UInputDataAsset * GetCharacterInputData();
+	virtual UInputDataAsset * GetCharacterInputData_Implementation()=0;
 };

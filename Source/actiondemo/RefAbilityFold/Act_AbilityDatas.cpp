@@ -7,19 +7,20 @@
 #define HEAVYATTACKNAME TEXT("Y")
 
 
-FAct_AbilityTypes UAct_AbilityDatas::GetAbilityTypesNotInComboChainByTag(FGameplayTag InputTag)
+bool UAct_AbilityDatas::GetAbilityTypesNotInComboChainByTag(FGameplayTag InputTag,FAct_AbilityTypes &Ability)
 {
-	if(!AbilitiesNotInComboChain) return FAct_AbilityTypes();
+	if(!AbilitiesNotInComboChain) return false;
 	for(FName RowName:AbilitiesNotInComboChain->GetRowNames())
 	{
 		FString Msg=FString::Printf(TEXT("Can't find %s"),*RowName.ToString());
 		FAct_AbilityTypes AbilityType=*AbilitiesNotInComboChain->FindRow<FAct_AbilityTypes>(RowName,Msg);
 		if (AbilityType.InputTag==InputTag)
 		{
-			return AbilityType;
+			Ability=AbilityType;
+			return true;
 		}
 	}
-	return FAct_AbilityTypes();
+	return false;
 }
 
 void UAct_AbilityDatasManager::init()

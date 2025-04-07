@@ -1,7 +1,22 @@
 ﻿#include "Act_AbilityChain.h"
-
+#include "Act_AbilitySystemComponent.h"
+#include "actiondemo/Character/CharacterInferface.h"
 #pragma region Act_AbilityChainRoot
-void UAct_AbilityChainRoot::Serlize(const TArray<FAct_AbilityTypes>& AbilitTypesRelaxHead,const TArray<FAct_AbilityTypes>&AbilitTypesHeavyHead)
+void UAct_AbilityChainChildNode::initialNode(FAct_AbilityTypes& AbilityTypes, int32 lengths,UAct_AbilitySystemComponent* AbilitySystemComponent)
+{
+	//初始化时添加内部技能并且向AbilitySystemCompoent组件赋予技能，并且将其委托绑定到types的handle中
+	length=lengths;
+	FGameplayAbilitySpec AbilitySpec(AbilityTypes.Ability);
+	AbilityTypes.Handle=AbilitySystemComponent->GiveAbility(AbilitySpec);
+	check(AbilityTypes.Handle.IsValid());
+	SelfAbilityType.Add(AbilityTypes);
+	//根据内部是否为空排序
+	SelfAbilityType.Sort([](const FAct_AbilityTypes & A,const FAct_AbilityTypes& B)
+	{
+		return !A.InputTag.IsValid()&&B.InputTag.IsValid();
+	});
+}
+void UAct_AbilityChainRoot::Serlize(const TArray<FAct_AbilityTypes>& AbilitTypesRelaxHead,const TArray<FAct_AbilityTypes>&AbilitTypesHeavyHead,UAct_AbilitySystemComponent*AbilitySystemComponent)
 {
 		//获取数据中的技能
 		PrimaryRelaxAbilityHead=nullptr;
@@ -15,7 +30,7 @@ void UAct_AbilityChainRoot::Serlize(const TArray<FAct_AbilityTypes>& AbilitTypes
 			{
 				if (Ability.AbilityList.Len()==1&&!UAct_AbilityChainFunctionLibrary::CheckAbilityArrayHasContain(PrimaryRelaxAbilityHead->SelfAbilityType,Ability))
 				{
-					PrimaryRelaxAbilityHead->initialNode(Ability,1);
+					PrimaryRelaxAbilityHead->initialNode(Ability,1,AbilitySystemComponent);
 				}
 			}
 			
@@ -28,21 +43,20 @@ void UAct_AbilityChainRoot::Serlize(const TArray<FAct_AbilityTypes>& AbilitTypes
 			{
 				if (Ability.AbilityList.Len()==1&&!UAct_AbilityChainFunctionLibrary::CheckAbilityArrayHasContain(PrimaryHeavyAbilityHead->SelfAbilityType,Ability))
 				{
-					PrimaryHeavyAbilityHead->initialNode(Ability,1);
+					PrimaryHeavyAbilityHead->initialNode(Ability,1,AbilitySystemComponent);
 				}
 				break;
 			}
 			
 		}
 	
-		AddChainAbility(RelaxData,PrimaryRelaxAbilityHead);
-		AddChainAbility(HeavyData,PrimaryHeavyAbilityHead);	
+		AddChainAbility(RelaxData,PrimaryRelaxAbilityHead,AbilitySystemComponent);
+		AddChainAbility(HeavyData,PrimaryHeavyAbilityHead,AbilitySystemComponent);	
 		
 		
 	
 }
-
-void UAct_AbilityChainRoot::AddChainAbility(const TArray<FAct_AbilityTypes>& AbilityDatas,UAct_AbilityChainChildNode* ChooesdChainNode)
+void UAct_AbilityChainRoot::AddChainAbility(const TArray<FAct_AbilityTypes>& AbilityDatas,UAct_AbilityChainChildNode* ChooesdChainNode,UAct_AbilitySystemComponent * AbilitySystemComponent)
 {
 	for (int i=1;i<AbilityDatas.Num();i++)
 	{
@@ -63,7 +77,7 @@ void UAct_AbilityChainRoot::AddChainAbility(const TArray<FAct_AbilityTypes>& Abi
 			if (!NextNode)
 			{
 				NextNode = NewObject<UAct_AbilityChainChildNode>();
-				NextNode->initialNode(CurrentAbilityType, CharIndex + 1);
+				NextNode->initialNode(CurrentAbilityType, CharIndex + 1,AbilitySystemComponent);
 			}
 			// 确保当前能力类型不重复地添加到节点
 			if (NextNode->length == CurrentAbilityType.AbilityList.Len() &&
@@ -79,19 +93,48 @@ void UAct_AbilityChainRoot::AddChainAbility(const TArray<FAct_AbilityTypes>& Abi
 		
 	}
 }
+//检查是否有正确的技能类
+bool UAct_AbilityChainChildNode::CheckCorrectAbilityTypes(const UAct_AbilitySystemComponent* AbilitySystemComponent,FAct_AbilityTypes& AbilityTypes) const
+{	FGameplayTagContainer AbilityTags=AbilitySystemComponent->GetOwnedGameplayTags();
+	for (FAct_AbilityTypes AbilityType :SelfAbilityType)
+	{
+		if (AbilityTags.HasAllExact(AbilityType.OwnerRequiresTag))
+		{
+			AbilityTypes=AbilityType;
+			return true;
+		}
+			
+	};
+	return false;
+}
+//当进入这个技能组件的时候尝试执行技能。
+bool UAct_AbilityChainChildNode::OnGameplayChainIn(UAct_AbilitySystemComponent * AbilitySystemComponent)
+{	FAct_AbilityTypes EnableAbilityTypes;
+	if (CheckCorrectAbilityTypes(AbilitySystemComponent,EnableAbilityTypes))
+	{
+		ICharacterInferface::Execute_GetCharacterInputData(AbilitySystemComponent->GetOwner());
+		bool Success=AbilitySystemComponent->TryActivateAbilityByClass(EnableAbilityTypes.Ability);
+		return Success;
+	}
+	return false;
+}
 #pragma endregion Act_AbilityChainRoot
 bool UAct_AbilityChainManager::ToNextNode(UAct_AbilityChainChildNode * CurrentNode,EAttackType AttackType,ECharacterUnAttackingState CurrentState)
-{
-	if (!CurrentNode || CurrentNode->SelfAbilityType[0].AttackingState != CurrentState)
+{	//如果当前阶段的状态和当前的状态不一样那么久从新赋值
+	if (CurrentNode->SelfAbilityType[0].AttackingState != CurrentState)
 	{
 		TObjectPtr<UAct_AbilityChainChildNode>& TempNode = (AttackType == EAttackType::RelaxAttack) 
 			? this->AbilityChainsRoot.FindChecked(CurrentState)->PrimaryRelaxAbilityHead 
 			: this->AbilityChainsRoot.FindChecked(CurrentState)->PrimaryHeavyAbilityHead;
 
 		CurrentNode = TempNode;
+		if (CurrentNode)
+		{
+			CurrentNode->OnGameplayChainIn(AbilitySystemComponent);
+		}
 		return CurrentNode != nullptr;
 	}
-
+	//如果一样那么向检查，如过检查不到那么
 	TObjectPtr<UAct_AbilityChainChildNode>& TempNode = (AttackType == EAttackType::RelaxAttack) 
 		? CurrentNode->NextRelaxAttack 
 		: CurrentNode->NextHeavyAttack;
@@ -99,7 +142,15 @@ bool UAct_AbilityChainManager::ToNextNode(UAct_AbilityChainChildNode * CurrentNo
 	if (TempNode)
 	{
 		CurrentNode = TempNode;
-		return true;
+		if (CurrentNode)
+		{
+			if(!CurrentNode->OnGameplayChainIn(AbilitySystemComponent))
+			{
+				TurnToRoot();
+				ToNextNode(CurrentNode,AttackType,CurrentState);
+			};
+			return true;
+		}
 	}
 
 	return false;
@@ -115,17 +166,25 @@ bool UAct_AbilityChainManager::TurnToRoot()
 	}
 	return false;
 }
-//TODO::目前技能树系统已经大改，需要你检查一下是否需要再某些地方进行安全检查避免缺少某一状态的技能而导致崩溃
-void UAct_AbilityChainManager::BeginConstruct(const UAct_AbilityDatasManager* datas)
-{	TArray<ECharacterUnAttackingState> CharacterUnAttackingStates;
+void UAct_AbilityChainManager::BeginConstruct(const UAct_AbilityDatasManager* datas,UAct_AbilitySystemComponent *Act_AbilitySystemComponent)
+{	
+	this->AbilitySystemComponent=Act_AbilitySystemComponent;
+	TArray<ECharacterUnAttackingState> CharacterUnAttackingStates;
 	datas->AbilitySum.AbilityTypesRelaxHead.GetKeys(CharacterUnAttackingStates);
 	if(CharacterUnAttackingStates.Num()<=0) return;
 	for (ECharacterUnAttackingState State:CharacterUnAttackingStates)
 	{
 		UAct_AbilityChainRoot* Root=NewObject<UAct_AbilityChainRoot>();
-		Root->Serlize(datas->AbilitySum.AbilityTypesRelaxHead.Find(State)->AbilityTypes,datas->AbilitySum.AbilityTypesHeavyHead.Find(State)->AbilityTypes);
+		Root->Serlize(datas->AbilitySum.AbilityTypesRelaxHead.Find(State)->AbilityTypes,datas->AbilitySum.AbilityTypesHeavyHead.Find(State)->AbilityTypes,AbilitySystemComponent);
 		AbilityChainsRoot.Add(State,Root);
 	}
+	for(FName Name:datas->AbilityData->AbilitiesNotInComboChain->GetRowNames())
+	{	FString MSG=TEXT("Can't find");
+		FGameplayAbilitySpec Spec(datas->AbilityData->AbilitiesNotInComboChain->FindRow<FAct_AbilityTypes>(Name,MSG)->Ability);
+		FGameplayTag Tag=datas->AbilityData->AbilitiesNotInComboChain->FindRow<FAct_AbilityTypes>(Name,MSG)->InputTag;
+		FGameplayAbilitySpecHandle Handle=Act_AbilitySystemComponent->GiveAbility(Spec);
+		UnComboHandle.Add(Tag,Handle);
+	};
 	
 }
 

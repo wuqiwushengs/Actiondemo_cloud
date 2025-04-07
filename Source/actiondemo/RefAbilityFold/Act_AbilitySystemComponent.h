@@ -4,8 +4,8 @@
 #include "AbilitySystemComponent.h"
 #include "Act_AbilityChain.h"
 #include "Act_AbilityDatas.h"
+#include "actiondemo/InputFold/InputInfo.h"
 #include "GameplayTagContainer.h"
-#include "actiondemo/InputDataAsset.h"
 #include "Act_AbilitySystemComponent.generated.h"
 //用来标明该轻攻击和重攻击所用的字符，后续技能表中只允许添加这两个字符
 #define RelaxAttackName "X"
@@ -29,21 +29,26 @@ struct FAbilityInputInfo
 	//其权重和InputData中的权重相同
 	UPROPERTY()
 	EInputWeightType InputWeightType;
-	float CheckTimeInterval(const FAbilityInputInfo &FirstInputInfo) const;
 };
-inline float FAbilityInputInfo::CheckTimeInterval(const FAbilityInputInfo &FirstInputInfo) const
+
+UENUM()
+enum class InputState
 {
-	float Intervaltime=this->InputWordTime-FirstInputInfo.InputWordTime;
-	return Intervaltime;
-}
+	//普通输入节点
+	NormalInputState,
+	//禁止输入节点
+	DisableInputState,
+	//预输入节点
+	PreInputState,
+};
 DECLARE_DYNAMIC_DELEGATE_ThreeParams(FTimeLockDelegate,const FInputActionInstance&,InpuActiondata, UInputDataAsset *,InputDataAsset,FGameplayTag, InputTag);
+DECLARE_DYNAMIC_DELEGATE(FTimerUnlockDelegate);
 DECLARE_DYNAMIC_DELEGATE_OneParam(FInputExecuteDelegate,const FAbilityInputInfo,Inputinfo);
 
 UCLASS(ClassGroup=(Custom), meta=(BlueprintSpawnableComponent))
 class ACTIONDEMO_API UAct_AbilitySystemComponent : public UAbilitySystemComponent
 {
 	GENERATED_BODY()
-
 public:
 	// Sets default values for this component's properties
 	UAct_AbilitySystemComponent();
@@ -51,14 +56,14 @@ public:
 protected:
 	// Called when the game starts
 	virtual void BeginPlay() override;
-	virtual void TickComponent(float DeltaTime, enum ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction) override;
-	virtual void EndPlay(const EEndPlayReason::Type EndPlayReason) override;
 public:
 	//Processing Function
 	UFUNCTION(BlueprintCallable, Category="InputDeal")
 	void ProcessingInputDataStarted(const FInputActionInstance& ActionInstance,FGameplayTag Inputag, UInputDataAsset * InputDataAsset);
 	UFUNCTION(BlueprintCallable, Category="InputDeal")
 	void ProcessingInputDataComplete(const FInputActionInstance& ActionInstance,FGameplayTag Inputag, UInputDataAsset * InputDataAsset);
+	UFUNCTION(BlueprintCallable, Category="InputDeal")
+	void ProcessingInputDataTrigger(const FInputActionInstance& ActionInstance,FGameplayTag Inputag, UInputDataAsset * InputDataAsset);
 	//InputLockFunction
 	//仅仅用在输入时
 	UFUNCTION()
@@ -66,39 +71,42 @@ public:
 	UFUNCTION(BlueprintCallable)
 	void SetInputLock(const FInputActionInstance & ActionInstance,UInputDataAsset *InputDataAsset,FGameplayTag Inputtag);
 	UFUNCTION(BlueprintCallable)
-	void SetInputUnlock(const FInputActionInstance & ActionInstance,UInputDataAsset *InputDataAsset,FGameplayTag Inputtag);
-
+	void SetInputUnlock();
+	
 	//计算缓冲区存储的输入实际应该采用哪一个输入
 	UFUNCTION(BlueprintCallable)
 	bool  ExeAbilityInputInfo(const TArray<FAbilityInputInfo>& InputTagsBuff,FAbilityInputInfo& OutInputInfo);
+	UFUNCTION()
+	void CheckFinalInput();
+	UFUNCTION(BlueprintCallable)
+	void OnInputFinal(const FAbilityInputInfo& InputInfo);
+#pragma region AbilityInputProcess
 	//缓冲区记录输入的tag
 	UPROPERTY(BlueprintReadOnly)
 	TArray<FAbilityInputInfo> InputTagsInbuff;
-	bool InputLock;
-	//通过设置此数据来对输入进行开锁或闭锁
+
 	UPROPERTY(BlueprintReadWrite,EditDefaultsOnly)
 	float AbilityInputBuffTime=0.1f;
-	UFUNCTION()
-	void CheckFinalInput();
+	//通过设置此数据来对输入进行开锁或闭锁
+	UPROPERTY()
+	InputState CurrentInputType;
 	UPROPERTY()
 	FTimerHandle FinalInputHandle;
 	//用来处理在锁定之后的内容
 	UPROPERTY()
 	FTimeLockDelegate InputLockDelegate;
 	UPROPERTY()
-	FTimeLockDelegate InputUnlockDelegate;
+	FTimerUnlockDelegate InputUnlockDelegate;
+	UFUNCTION()
+	void OnPreSkillExecute(const FGameplayTag ExeTag, int32 count);
+#pragma endregion AbiltyInputProcess
 	//输入缓冲结束后执行
 	UPROPERTY()
 	FInputExecuteDelegate InputExecuteDelegate;
-	UFUNCTION(BlueprintCallable)
-	void OnInputFinal(const FAbilityInputInfo& InputInfo);
 	//技能文件
 	UPROPERTY(EditDefaultsOnly,BlueprintReadWrite)
 	TObjectPtr<UAct_AbilityDatasManager> AbilityDataManager;
 	//技能树文件
 	UPROPERTY(EditDefaultsOnly,BlueprintReadWrite)
 	TObjectPtr<UAct_AbilityChainManager> AbilityChainManager;
-	//用于蓄力技能在松开按键时结束
-	UPROPERTY()
-	TMap<FGameplayTag,FGameplayAbilitySpecHandle> HoldAbilityHandle;
 };

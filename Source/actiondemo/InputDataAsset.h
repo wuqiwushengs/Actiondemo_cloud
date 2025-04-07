@@ -22,6 +22,8 @@ struct FInputData
 	UInputAction * InputAction;
 	UPROPERTY(EditAnywhere,BlueprintReadWrite,Category="Input")
 	bool bAbilityInput;
+	UPROPERTY(EditAnywhere,BlueprintReadWrite,Category="Input")\
+	bool bCanHold;
 	//只有当是技能时才能打开设置
 	UPROPERTY(EditAnywhere,BlueprintReadWrite,Category="Input",meta=(EditCondition="bAbilityInput"))
 	EInputWeightType InputType;
