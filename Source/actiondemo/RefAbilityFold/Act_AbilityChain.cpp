@@ -121,17 +121,16 @@ bool UAct_AbilityChainChildNode::OnGameplayChainIn(UAct_AbilitySystemComponent *
 #pragma endregion Act_AbilityChainRoot
 bool UAct_AbilityChainManager::ToNextNode(UAct_AbilityChainChildNode * CurrentNode,EAttackType AttackType,ECharacterUnAttackingState CurrentState)
 {	//如果当前阶段的状态和当前的状态不一样那么久从新赋值
-	if (CurrentNode->SelfAbilityType[0].AttackingState != CurrentState)
+
+	if (LastAbilityState!= CurrentState||!CurrentNode)
 	{
 		TObjectPtr<UAct_AbilityChainChildNode>& TempNode = (AttackType == EAttackType::RelaxAttack) 
-			? this->AbilityChainsRoot.FindChecked(CurrentState)->PrimaryRelaxAbilityHead 
-			: this->AbilityChainsRoot.FindChecked(CurrentState)->PrimaryHeavyAbilityHead;
-
+			? this->AbilityChainsRoot[CurrentState]->PrimaryRelaxAbilityHead 
+			: this->AbilityChainsRoot[CurrentState]->PrimaryHeavyAbilityHead;
 		CurrentNode = TempNode;
-		if (CurrentNode)
-		{
-			CurrentNode->OnGameplayChainIn(AbilitySystemComponent);
-		}
+		CurrentNode->OnGameplayChainIn(AbilitySystemComponent);
+		LastAbilityState=CurrentState;
+		
 		return CurrentNode != nullptr;
 	}
 	//如果一样那么向检查，如过检查不到那么
@@ -139,22 +138,16 @@ bool UAct_AbilityChainManager::ToNextNode(UAct_AbilityChainChildNode * CurrentNo
 		? CurrentNode->NextRelaxAttack 
 		: CurrentNode->NextHeavyAttack;
 
-	if (TempNode)
+	if (!TempNode)
 	{
-		CurrentNode = TempNode;
-		if (CurrentNode)
-		{
-			if(!CurrentNode->OnGameplayChainIn(AbilitySystemComponent))
-			{
-				TurnToRoot();
-				ToNextNode(CurrentNode,AttackType,CurrentState);
-			};
-			return true;
-		}
+		TurnToRoot();
+		return ToNextNode(CurrentNode,AttackType,CurrentState);
 	}
-
-	return false;
-
+	CurrentNode = TempNode;
+	CurrentNode->OnGameplayChainIn(AbilitySystemComponent);
+	LastAbilityState=CurrentState;
+	return true;
+	
 }
 
 bool UAct_AbilityChainManager::TurnToRoot()

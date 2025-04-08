@@ -79,7 +79,9 @@ public:
 	FAct_AbilityTypes CurrentAbilityType;
 	//后面在角色那里绑一个函数
 	UPROPERTY()
-	ECharacterUnAttackingState CurrentAbilityState;
+	ECharacterUnAttackingState CurrentAbilityState=ECharacterUnAttackingState::Normal;
+	UPROPERTY()
+	ECharacterUnAttackingState LastAbilityState=ECharacterUnAttackingState::Normal;
 	//获取AbilitSystemCompoent
 	UPROPERTY()
 	TObjectPtr<UAct_AbilitySystemComponent> AbilitySystemComponent;

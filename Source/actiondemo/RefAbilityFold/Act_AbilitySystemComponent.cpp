@@ -74,14 +74,17 @@ void UAct_AbilitySystemComponent::ProcessingInputDataStarted(const FInputActionI
 			}
 			break;
 		}
+	case InputState::DisableInputState: return;
 	}
 }
 void UAct_AbilitySystemComponent::ProcessingInputDataComplete(const FInputActionInstance& ActionInstance,FGameplayTag Inputag, UInputDataAsset* InputDataAsset)
 {	//检查获取取消键的技能的委托并且释放。保证不会因为一个导致其他的技能被释放
+	
 	FAct_AbilityTypes NotInComboSkill;
 	FGameplayAbilitySpecHandle Handle;
 	FInputData InputData=InputDataAsset->GetAbilityInputDatabyTag(Inputag);
-	if (InputData.bCanHold&&AbilityChainManager->UnComboHandle.Find(Inputag)->IsValid())
+	if (!InputData.bCanHold)return;
+	if (AbilityChainManager->UnComboHandle.Find(Inputag)->IsValid())
 	{
 		Handle=*AbilityChainManager->UnComboHandle.Find(Inputag);
 		check(Handle.IsValid());
@@ -92,7 +95,7 @@ void UAct_AbilitySystemComponent::ProcessingInputDataComplete(const FInputAction
 			Ability->OnPressedDelegate.Broadcast();
 		}
 	}
-	if (InputData.bCanHold&&AbilityChainManager->CurrentAbilityType.InputTag==Inputag)
+	if (AbilityChainManager->CurrentAbilityType.InputTag==Inputag)
 	{
 		Handle=AbilityChainManager->CurrentAbilityType.Handle;
 		check(Handle.IsValid());
@@ -103,30 +106,21 @@ void UAct_AbilitySystemComponent::ProcessingInputDataComplete(const FInputAction
 			Ability->OnPressedDelegate.Broadcast();
 		}
 	}
-	
-	
-	
 }
 
 void UAct_AbilitySystemComponent::ProcessingInputDataTrigger(const FInputActionInstance& ActionInstance,
 	FGameplayTag Inputag, UInputDataAsset* InputDataAsset)
 {
-	FInputData InputData=InputDataAsset->GetAbilityInputDatabyTag(Inputag);
-	FAct_AbilityTypes NotInComboSkill;
-	FGameplayAbilitySpecHandle Handle;
-	Handle=*AbilityChainManager->UnComboHandle.Find(Inputag);
+	FGameplayAbilitySpecHandle Handle=*AbilityChainManager->UnComboHandle.Find(Inputag);
 	if (Handle.IsValid())
     {
-        check(Handle.IsValid());
         bool BInstance=false;
-        const UAct_Ability * Ability=CastChecked<UAct_Ability>(UAbilitySystemBlueprintLibrary::GetGameplayAbilityFromSpecHandle(this,Handle,BInstance));
-        if (BInstance)
-        {
-            Ability;
-        }
+        if (const UAct_Ability * Ability=Cast<UAct_Ability>(UAbilitySystemBlueprintLibrary::GetGameplayAbilityFromSpecHandle(this,Handle,BInstance)))
+		{
+        	IIAct_AbilityInterface::Execute_SetTriggerTime(const_cast<UAct_Ability*>(Ability),ActionInstance.GetTriggeredTime());
+		}
     }
 }
-
 bool UAct_AbilitySystemComponent::ChekcInputLengthToSetInputLock(float InputLength,const FInputActionInstance & ActionInstance,UInputDataAsset *InputDataAsset,FGameplayTag Inputtag)
 {//如果输入时间超过缓冲时间则设置输入锁。
 	if (InputLength>=AbilityInputBuffTime)
