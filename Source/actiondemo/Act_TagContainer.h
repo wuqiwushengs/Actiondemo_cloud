@@ -24,5 +24,7 @@ namespace ActTagContainer
 	ACTIONDEMO_API UE_DECLARE_GAMEPLAY_TAG_EXTERN(Released);
 	//预输入执行Tag
 	ACTIONDEMO_API UE_DECLARE_GAMEPLAY_TAG_EXTERN(ExePreInputRelaxAttack);
+	//单一技能连击输入Tag
+	ACTIONDEMO_API UE_DECLARE_GAMEPLAY_TAG_EXTERN(ExeMulityInputRelaxAttack);
 }
 

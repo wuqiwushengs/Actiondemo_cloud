@@ -74,7 +74,13 @@ void UAct_AbilitySystemComponent::ProcessingInputDataStarted(const FInputActionI
 			}
 			break;
 		}
-	case InputState::DisableInputState: return;
+		
+	case InputState::DisableInputState:
+		{	//用来处理在输入锁定后连续打击类型的技能
+			FGameplayEventData EventData;
+			EventData.Instigator=GetOwner();
+			UAbilitySystemBlueprintLibrary::SendGameplayEventToActor(GetOwner(),ActTagContainer::ExeMulityInputRelaxAttack,EventData);
+		}
 	}
 }
 void UAct_AbilitySystemComponent::ProcessingInputDataComplete(const FInputActionInstance& ActionInstance,FGameplayTag Inputag, UInputDataAsset* InputDataAsset)
@@ -213,6 +219,11 @@ void UAct_AbilitySystemComponent::OnInputFinal(const FAbilityInputInfo& InputInf
 			this->TryActivateAbilityByClass(RollingAbility.Ability);
 		}
 	}
+}
+
+void UAct_AbilitySystemComponent::SetInputstate(InputState InputType)
+{
+	this->CurrentInputType==InputType;
 }
 
 void UAct_AbilitySystemComponent::OnPreSkillExecute(const FGameplayTag ExeTag, int32 count)

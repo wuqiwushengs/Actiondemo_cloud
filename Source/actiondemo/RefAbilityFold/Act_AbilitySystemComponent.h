@@ -59,7 +59,8 @@ protected:
 public:
 	//Processing Function
 	UFUNCTION(BlueprintCallable, Category="InputDeal")
-	void ProcessingInputDataStarted(const FInputActionInstance& ActionInstance,FGameplayTag Inputag, UInputDataAsset * InputDataAsset);
+	void ProcessingInputDataStarted(const FInputActionInstance& ActionInstance, FGameplayTag Inputag,
+	                                UInputDataAsset* InputDataAsset) -> void;
 	UFUNCTION(BlueprintCallable, Category="InputDeal")
 	void ProcessingInputDataComplete(const FInputActionInstance& ActionInstance,FGameplayTag Inputag, UInputDataAsset * InputDataAsset);
 	UFUNCTION(BlueprintCallable, Category="InputDeal")
@@ -72,7 +73,6 @@ public:
 	void SetInputLock(const FInputActionInstance & ActionInstance,UInputDataAsset *InputDataAsset,FGameplayTag Inputtag);
 	UFUNCTION(BlueprintCallable)
 	void SetInputUnlock();
-	
 	//计算缓冲区存储的输入实际应该采用哪一个输入
 	UFUNCTION(BlueprintCallable)
 	bool  ExeAbilityInputInfo(const TArray<FAbilityInputInfo>& InputTagsBuff,FAbilityInputInfo& OutInputInfo);
@@ -84,12 +84,14 @@ public:
 	//缓冲区记录输入的tag
 	UPROPERTY(BlueprintReadOnly)
 	TArray<FAbilityInputInfo> InputTagsInbuff;
-
+	//单次输入的缓存最大时间
 	UPROPERTY(BlueprintReadWrite,EditDefaultsOnly)
 	float AbilityInputBuffTime=0.1f;
 	//通过设置此数据来对输入进行开锁或闭锁
 	UPROPERTY()
 	InputState CurrentInputType;
+	UFUNCTION()
+	void SetInputstate(InputState InputType);
 	UPROPERTY()
 	FTimerHandle FinalInputHandle;
 	//用来处理在锁定之后的内容

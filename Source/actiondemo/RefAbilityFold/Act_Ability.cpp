@@ -23,6 +23,11 @@ void UAct_Ability::ActivateAbility(const FGameplayAbilitySpecHandle Handle, cons
 	
 }
 
+void UAct_Ability::EndAbility(const FGameplayAbilitySpecHandle Handle, const FGameplayAbilityActorInfo* ActorInfo,const FGameplayAbilityActivationInfo ActivationInfo, bool bReplicateEndAbility, bool bWasCancelled)
+{
+	Super::EndAbility(Handle, ActorInfo, ActivationInfo, bReplicateEndAbility, bWasCancelled);
+}
+
 void UAct_Ability::SetTriggerTime_Implementation(float AbilityTime)
 {
 	this->AbilityTriggerTime=AbilityTime;

@@ -128,10 +128,10 @@ bool UAct_AbilityChainManager::ToNextNode(UAct_AbilityChainChildNode * CurrentNo
 			? this->AbilityChainsRoot[CurrentState]->PrimaryRelaxAbilityHead 
 			: this->AbilityChainsRoot[CurrentState]->PrimaryHeavyAbilityHead;
 		CurrentNode = TempNode;
+		if (!CurrentNode)return false;
 		CurrentNode->OnGameplayChainIn(AbilitySystemComponent);
 		LastAbilityState=CurrentState;
-		
-		return CurrentNode != nullptr;
+		return true;
 	}
 	//如果一样那么向检查，如过检查不到那么
 	TObjectPtr<UAct_AbilityChainChildNode>& TempNode = (AttackType == EAttackType::RelaxAttack) 
