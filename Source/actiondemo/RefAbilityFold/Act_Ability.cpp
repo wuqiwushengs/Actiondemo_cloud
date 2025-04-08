@@ -32,6 +32,7 @@ void UAct_Ability::SetTriggerTime_Implementation(float AbilityTime)
 
 void UAct_Ability::OnAbilityTrigger(float TriggerTime)
 {
-	//处理所有持续时间的技能的一些效果
+	//处理所有持续时间的技能的一些效果。
+	
 	
 }
