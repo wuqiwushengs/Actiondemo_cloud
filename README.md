@@ -1,3 +1,3 @@
 # actiondemo
 
-Developed with Unreal Engine 5
+自制Act类动作游戏，期望能够完善输入内容，摄像机系统，打击感以及几个智能小兵和boss.
