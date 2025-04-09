@@ -39,6 +39,8 @@ public:
 	//Character Interface Start
 	virtual ECharacterUnAttackingState GetCharacterUnAttackingState_Implementation() override;
 	virtual UInputDataAsset* GetCharacterInputData_Implementation() override;
+	virtual void SetCharacterAttackingState_Implementation(ECharacterState State) override;
+	virtual void SetCharacterUnAttackingState_Implementation(ECharacterUnAttackingState State) override;
 	//Character Interface End
 	//CameraInit(temp)
 	//@TODO:CreateCameraSystem;

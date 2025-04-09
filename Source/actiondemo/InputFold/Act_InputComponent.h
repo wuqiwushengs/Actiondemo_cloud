@@ -37,7 +37,7 @@ inline void UAct_InputComponent::BindAbilityFunctions( TArray<FInputData>& Input
 		BindAction(Data.InputAction,ETriggerEvent::Started,owner,FunctionName,Data.InputTag);
 		if (Data.bCanHold)
 		{
-			BindAction(Data.InputAction,ETriggerEvent::Triggered,owner,FunctionName,Data.InputTag);
+			BindAction(Data.InputAction,ETriggerEvent::Ongoing,owner,FunctionName,Data.InputTag);
 			BindAction(Data.InputAction,ETriggerEvent::Completed,owner,FunctionName,Data.InputTag);
 		}
 	}

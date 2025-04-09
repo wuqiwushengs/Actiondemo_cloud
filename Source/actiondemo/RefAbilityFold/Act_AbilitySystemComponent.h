@@ -60,7 +60,7 @@ public:
 	//Processing Function
 	UFUNCTION(BlueprintCallable, Category="InputDeal")
 	void ProcessingInputDataStarted(const FInputActionInstance& ActionInstance, FGameplayTag Inputag,
-	                                UInputDataAsset* InputDataAsset) -> void;
+	                                UInputDataAsset* InputDataAsset) ;
 	UFUNCTION(BlueprintCallable, Category="InputDeal")
 	void ProcessingInputDataComplete(const FInputActionInstance& ActionInstance,FGameplayTag Inputag, UInputDataAsset * InputDataAsset);
 	UFUNCTION(BlueprintCallable, Category="InputDeal")

@@ -77,9 +77,13 @@ void UAct_AbilitySystemComponent::ProcessingInputDataStarted(const FInputActionI
 		
 	case InputState::DisableInputState:
 		{	//用来处理在输入锁定后连续打击类型的技能
-			FGameplayEventData EventData;
-			EventData.Instigator=GetOwner();
-			UAbilitySystemBlueprintLibrary::SendGameplayEventToActor(GetOwner(),ActTagContainer::ExeMulityInputRelaxAttack,EventData);
+			//需要加一个判断，假如当前的输入tag是预输入阶段的tag那么就执行
+			if (Inputag==AbilityChainManager->CurrentAbilityType.InputTag)
+			{
+				FGameplayEventData EventData;
+				EventData.Instigator=GetOwner();
+				UAbilitySystemBlueprintLibrary::SendGameplayEventToActor(GetOwner(),ActTagContainer::ExeMulityInputRelaxAttack,EventData);
+			}
 		}
 	}
 }
@@ -98,7 +102,7 @@ void UAct_AbilitySystemComponent::ProcessingInputDataComplete(const FInputAction
 		const UAct_Ability * Ability=CastChecked<UAct_Ability>(UAbilitySystemBlueprintLibrary::GetGameplayAbilityFromSpecHandle(this,Handle,BInstance));
 		if (BInstance)
 		{
-			Ability->OnPressedDelegate.Broadcast();
+			Ability->OnRealesedDelegate.Broadcast();
 		}
 	}
 	if (AbilityChainManager->CurrentAbilityType.InputTag==Inputag)
@@ -109,7 +113,7 @@ void UAct_AbilitySystemComponent::ProcessingInputDataComplete(const FInputAction
 		const UAct_Ability * Ability=CastChecked<UAct_Ability>(UAbilitySystemBlueprintLibrary::GetGameplayAbilityFromSpecHandle(this,Handle,BInstance));
 		if (BInstance)
 		{
-			Ability->OnPressedDelegate.Broadcast();
+			Ability->OnRealesedDelegate.Broadcast();
 		}
 	}
 }
@@ -118,14 +122,24 @@ void UAct_AbilitySystemComponent::ProcessingInputDataTrigger(const FInputActionI
 	FGameplayTag Inputag, UInputDataAsset* InputDataAsset)
 {
 	FGameplayAbilitySpecHandle Handle=*AbilityChainManager->UnComboHandle.Find(Inputag);
-	if (Handle.IsValid())
+	if (Handle.IsValid()&&InputDataAsset->GetAbilityInputDatabyTag(Inputag).bCanHold)
     {
         bool BInstance=false;
         if (const UAct_Ability * Ability=Cast<UAct_Ability>(UAbilitySystemBlueprintLibrary::GetGameplayAbilityFromSpecHandle(this,Handle,BInstance)))
 		{
-        	IIAct_AbilityInterface::Execute_SetTriggerTime(const_cast<UAct_Ability*>(Ability),ActionInstance.GetTriggeredTime());
+        	IIAct_AbilityInterface::Execute_SetTriggerTime(const_cast<UAct_Ability*>(Ability),ActionInstance.GetElapsedTime());
 		}
     }
+	Handle=AbilityChainManager->CurrentAbilityType.Handle;
+	if (Handle.IsValid()&&InputDataAsset->GetAbilityInputDatabyTag(Inputag).bCanHold)
+	{
+		bool BInstance=false;
+		if (const UAct_Ability * Ability=Cast<UAct_Ability>(UAbilitySystemBlueprintLibrary::GetGameplayAbilityFromSpecHandle(this,Handle,BInstance)))
+		{
+			IIAct_AbilityInterface::Execute_SetTriggerTime(const_cast<UAct_Ability*>(Ability),ActionInstance.GetTriggeredTime());
+		}
+	}
+	
 }
 bool UAct_AbilitySystemComponent::ChekcInputLengthToSetInputLock(float InputLength,const FInputActionInstance & ActionInstance,UInputDataAsset *InputDataAsset,FGameplayTag Inputtag)
 {//如果输入时间超过缓冲时间则设置输入锁。
@@ -223,7 +237,7 @@ void UAct_AbilitySystemComponent::OnInputFinal(const FAbilityInputInfo& InputInf
 
 void UAct_AbilitySystemComponent::SetInputstate(InputState InputType)
 {
-	this->CurrentInputType==InputType;
+	this->CurrentInputType=InputType;
 }
 
 void UAct_AbilitySystemComponent::OnPreSkillExecute(const FGameplayTag ExeTag, int32 count)

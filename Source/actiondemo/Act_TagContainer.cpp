@@ -18,5 +18,7 @@ namespace ActTagContainer
 	ACTIONDEMO_API UE_DEFINE_GAMEPLAY_TAG(Released,"Input.Released");
 	ACTIONDEMO_API UE_DEFINE_GAMEPLAY_TAG(ExePreInputRelaxAttack,"Input.Manage.ExePreInputRelaxAttack");
 	ACTIONDEMO_API UE_DEFINE_GAMEPLAY_TAG(ExeMulityInputRelaxAttack,"Input.Manage.ExeMutualityInputRelaxAttack");
+	ACTIONDEMO_API UE_DEFINE_GAMEPLAY_TAG(ExeInterrupt,"Character.State.InterruptClass");
+	ACTIONDEMO_API UE_DEFINE_GAMEPLAY_TAG(ExeMulityInputExeAttack,"Input.Manage.ExeMutualityInputExeAttack");
 	
 }

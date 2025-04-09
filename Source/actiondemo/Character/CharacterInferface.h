@@ -4,8 +4,10 @@
 
 #include "CoreMinimal.h"
 #include "UObject/Interface.h"
+#include "CharacterTypes.h"
 #include "CharacterInferface.generated.h"
 
+class UInputDataAsset;
 enum class ECharacterUnAttackingState : uint8;
 // This class does not need to be modified.
 UINTERFACE()
@@ -29,4 +31,10 @@ public:
 	UFUNCTION(BlueprintNativeEvent)
 	UInputDataAsset * GetCharacterInputData();
 	virtual UInputDataAsset * GetCharacterInputData_Implementation()=0;
+	UFUNCTION(BlueprintNativeEvent)
+	void SetCharacterAttackingState(ECharacterState State);
+	virtual void SetCharacterAttackingState_Implementation(ECharacterState State)=0;
+	UFUNCTION(BlueprintNativeEvent)
+	void SetCharacterUnAttackingState(ECharacterUnAttackingState State);
+	virtual void SetCharacterUnAttackingState_Implementation(ECharacterUnAttackingState State)=0;
 };

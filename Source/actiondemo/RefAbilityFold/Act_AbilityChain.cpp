@@ -171,6 +171,7 @@ void UAct_AbilityChainManager::BeginConstruct(const UAct_AbilityDatasManager* da
 		Root->Serlize(datas->AbilitySum.AbilityTypesRelaxHead.Find(State)->AbilityTypes,datas->AbilitySum.AbilityTypesHeavyHead.Find(State)->AbilityTypes,AbilitySystemComponent);
 		AbilityChainsRoot.Add(State,Root);
 	}
+	if (!datas->AbilityData->AbilitiesNotInComboChain) return;
 	for(FName Name:datas->AbilityData->AbilitiesNotInComboChain->GetRowNames())
 	{	FString MSG=TEXT("Can't find");
 		FGameplayAbilitySpec Spec(datas->AbilityData->AbilitiesNotInComboChain->FindRow<FAct_AbilityTypes>(Name,MSG)->Ability);
