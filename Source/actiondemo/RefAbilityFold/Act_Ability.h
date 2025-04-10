@@ -3,6 +3,7 @@
 #pragma once
 
 #include "CoreMinimal.h"
+#include "Act_AbilityBase.h"
 #include "Abilities/GameplayAbility.h"
 #include "AbilityInterFace/IAct_AbilityInterface.h"
 #include "Abilities/Async/AbilityAsync_WaitGameplayEvent.h"
@@ -10,12 +11,12 @@
 
 class UAbilityTask_WaitGameplayEvent;
 class UAbilityTask_PlayMontageAndWait;
-DECLARE_MULTICAST_DELEGATE(FOnpressedDelegate)
+
 /**
  * 该部分中将一个动画分为前摇和后摇，蓄力阶段，连打阶段四个部分，对于前摇和后摇并没有分太细。
  */
 UCLASS()
-class ACTIONDEMO_API UAct_Ability : public UGameplayAbility,public IIAct_AbilityInterface
+class ACTIONDEMO_API UAct_Ability : public UAct_AbilityBase
 {
 	GENERATED_BODY()
 public:
@@ -25,16 +26,18 @@ public:
 	virtual void EndAbility(const FGameplayAbilitySpecHandle Handle, const FGameplayAbilityActorInfo* ActorInfo, const FGameplayAbilityActivationInfo ActivationInfo, bool bReplicateEndAbility, bool bWasCancelled) override;
 	UFUNCTION()
 	void OnEndAbility();
-	UFUNCTION()
-	void OnAbilityTrigger(float AbilityTime=0);
-	FOnpressedDelegate OnRealesedDelegate;
+	virtual void OnAbilityTrigger(float AbilityTime=0) override;
 #pragma region TimeInformation
+	UPROPERTY()
+	UAbilityAsync_WaitGameplayEvent *EventOnRealsed;
 	UPROPERTY()
 	float AbilityTriggerTime;
 	UPROPERTY()
 	bool bIsTriggerTimeSet;
 	UPROPERTY(EditDefaultsOnly)
 	float AbilityMinHoldTime=0.5f;
+	UPROPERTY()
+	bool BExexute;
 	virtual void SetTriggerTime_Implementation(float TriggerTime) override;
 #pragma endregion
 #pragma region Animation
@@ -46,6 +49,8 @@ public:
 	UAnimMontage* PreMontage;
 	UFUNCTION()
 	void PreHandleMontageBlendout();
+	UFUNCTION()
+	virtual void OnPreAnimPresssed() ;
 #pragma  endregion pre
 #pragma region Hold
 	//技能蓄力阶段的任务：需要判断是否是蓄力
@@ -58,7 +63,9 @@ public:
 	UPROPERTY()
 	float HoldUpLevelTime;
 	UFUNCTION()
-	void OnHoldEnded();
+	void OnHoldEnded(FGameplayEventData EventData);
+	UFUNCTION()
+	virtual void OnHoldPressed() ;
 #pragma endregion Hold
 #pragma region Continue
 	//技能在连续打击阶段的任务：需要判断是否是连续打击
@@ -66,7 +73,7 @@ public:
 	UAbilityTask_PlayMontageAndWait* ContinueMontageTask;
 	//等待连续打击的tag
 	UPROPERTY()
-	UAbilityAsync_WaitGameplayEvent* ContinueTagTask;
+	UAbilityTask_WaitGameplayEvent* ContinueTagTask;
 	//连续打击的蒙太奇不是循环蒙太奇
 	UPROPERTY(EditDefaultsOnly,meta=(EditCondition="bisContinueMontage"))
 	UAnimMontage* ContinueMontage;
@@ -79,6 +86,8 @@ public:
 	void OnContinueTagReceived (FGameplayEventData EventData);
 	UFUNCTION()
 	void TurnToPostMontage();
+	UFUNCTION()
+	virtual  void OnContinuePressed();
 #pragma endregion Continue
 #pragma region post
 	//技能后摇阶段的任务：需要判断是否有后摇
@@ -93,9 +102,12 @@ public:
 	UAnimMontage* PostContinueMontage;
 	//保证Interupt安全的方式
 	UFUNCTION()
-	void HandleMontageInterrupted();
+	virtual void HandleMontageInterrupted();
+	//用来处理蓄力技能的后摇。包括格挡技能，假如其格挡失误或者如何可通过你的后面重写该函数来处理。
 	UFUNCTION()
-	int32 CaculateAbilityHoldLevel(float HoldLevelTime ) const ;
+	virtual int32 CaculateAbilityHoldLevel(float HoldLevelTime ) const ;
+	UFUNCTION()
+	virtual void OnPostPressed() ;
 #pragma endregion post
 #pragma endregion Animation	
 	

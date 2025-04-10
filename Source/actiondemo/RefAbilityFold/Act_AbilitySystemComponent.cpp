@@ -64,7 +64,7 @@ void UAct_AbilitySystemComponent::ProcessingInputDataStarted(const FInputActionI
 			{
 				InputTagsInbuff.Add(Abilityinfo);
 			}
-			if (InputTagsInbuff.Num()==1&&!GetWorld()->GetTimerManager().IsTimerActive(FinalInputHandle))
+			if (InputTagsInbuff.Num()>=1&&!GetWorld()->GetTimerManager().IsTimerActive(FinalInputHandle))
 			{
 				//假如已经绑定了那就不再进行绑定
 				int32 index=this->InputTagsInbuff.Num()-1;
@@ -82,7 +82,15 @@ void UAct_AbilitySystemComponent::ProcessingInputDataStarted(const FInputActionI
 			{
 				FGameplayEventData EventData;
 				EventData.Instigator=GetOwner();
-				UAbilitySystemBlueprintLibrary::SendGameplayEventToActor(GetOwner(),ActTagContainer::ExeMulityInputRelaxAttack,EventData);
+				EventData.EventTag=Inputag;
+				check(GetOwner());
+				/*UAbilitySystemBlueprintLibrary::SendGameplayEventToActor(GetOwner(),ActTagContainer::ExeMulityInputRelaxAttack,EventData);*/
+				if (FGameplayEventMulticastDelegate* Delegate = GenericGameplayEventCallbacks.Find(ActTagContainer::ExeMulityInputRelaxAttack))
+				{
+					// Make a copy before broadcasting to prevent memory stomping
+					FGameplayEventMulticastDelegate DelegateCopy = *Delegate;
+					DelegateCopy.Broadcast(&EventData);
+				}
 			}
 		}
 	}
@@ -93,53 +101,46 @@ void UAct_AbilitySystemComponent::ProcessingInputDataComplete(const FInputAction
 	FAct_AbilityTypes NotInComboSkill;
 	FGameplayAbilitySpecHandle Handle;
 	FInputData InputData=InputDataAsset->GetAbilityInputDatabyTag(Inputag);
-	if (!InputData.bCanHold)return;
-	if (AbilityChainManager->UnComboHandle.Find(Inputag)->IsValid())
-	{
-		Handle=*AbilityChainManager->UnComboHandle.Find(Inputag);
-		check(Handle.IsValid());
-		bool BInstance=false;
-		const UAct_Ability * Ability=CastChecked<UAct_Ability>(UAbilitySystemBlueprintLibrary::GetGameplayAbilityFromSpecHandle(this,Handle,BInstance));
-		if (BInstance)
-		{
-			Ability->OnRealesedDelegate.Broadcast();
-		}
+	if (AbilityChainManager->UnComboHandle.Find(Inputag))
+	{		//处理用sendgameplaytag;
+		UAbilitySystemBlueprintLibrary::SendGameplayEventToActor(GetOwner(),ActTagContainer::ExeUnComboAbilityInputReleased,FGameplayEventData());
 	}
-	if (AbilityChainManager->CurrentAbilityType.InputTag==Inputag)
+	if (AbilityChainManager->CurrentAbilityType.InputTag==Inputag&&ActionInstance.GetElapsedTime()>0.2)
 	{
-		Handle=AbilityChainManager->CurrentAbilityType.Handle;
-		check(Handle.IsValid());
-		bool BInstance=false;
-		const UAct_Ability * Ability=CastChecked<UAct_Ability>(UAbilitySystemBlueprintLibrary::GetGameplayAbilityFromSpecHandle(this,Handle,BInstance));
-		if (BInstance)
-		{
-			Ability->OnRealesedDelegate.Broadcast();
-		}
+		
+		UAbilitySystemBlueprintLibrary::SendGameplayEventToActor(GetOwner(),ActTagContainer::ExeHoldAbilityInputRelaxAttackReleased,FGameplayEventData());
 	}
 }
 
 void UAct_AbilitySystemComponent::ProcessingInputDataTrigger(const FInputActionInstance& ActionInstance,
 	FGameplayTag Inputag, UInputDataAsset* InputDataAsset)
-{
-	FGameplayAbilitySpecHandle Handle=*AbilityChainManager->UnComboHandle.Find(Inputag);
-	if (Handle.IsValid()&&InputDataAsset->GetAbilityInputDatabyTag(Inputag).bCanHold)
-    {
-        bool BInstance=false;
-        if (const UAct_Ability * Ability=Cast<UAct_Ability>(UAbilitySystemBlueprintLibrary::GetGameplayAbilityFromSpecHandle(this,Handle,BInstance)))
-		{
-        	IIAct_AbilityInterface::Execute_SetTriggerTime(const_cast<UAct_Ability*>(Ability),ActionInstance.GetElapsedTime());
-		}
-    }
-	Handle=AbilityChainManager->CurrentAbilityType.Handle;
-	if (Handle.IsValid()&&InputDataAsset->GetAbilityInputDatabyTag(Inputag).bCanHold)
+{	FGameplayAbilitySpecHandle Handle;
+	if (AbilityChainManager->UnComboHandle.Find(Inputag))
 	{
-		bool BInstance=false;
-		if (const UAct_Ability * Ability=Cast<UAct_Ability>(UAbilitySystemBlueprintLibrary::GetGameplayAbilityFromSpecHandle(this,Handle,BInstance)))
+		Handle=*AbilityChainManager->UnComboHandle.Find(Inputag);
+		check(Handle.IsValid());
+		if (Handle.IsValid()&&InputDataAsset->GetAbilityInputDatabyTag(Inputag).bCanHold)
 		{
-			IIAct_AbilityInterface::Execute_SetTriggerTime(const_cast<UAct_Ability*>(Ability),ActionInstance.GetTriggeredTime());
+			bool BInstance=false;
+			if (const UAct_Ability * Ability=Cast<UAct_Ability>(UAbilitySystemBlueprintLibrary::GetGameplayAbilityFromSpecHandle(this,Handle,BInstance)))
+			{
+				IIAct_AbilityInterface::Execute_SetTriggerTime(const_cast<UAct_Ability*>(Ability),ActionInstance.GetElapsedTime());
+			}
 		}
 	}
-	
+	if (AbilityChainManager->CurrentAbilityType.Handle.IsValid())
+	{
+		Handle=AbilityChainManager->CurrentAbilityType.Handle;
+		check(Handle.IsValid());
+		if (Handle.IsValid()&&InputDataAsset->GetAbilityInputDatabyTag(Inputag).bCanHold)
+		{
+			bool BInstance=false;
+			if (const UAct_Ability * Ability=Cast<UAct_Ability>(UAbilitySystemBlueprintLibrary::GetGameplayAbilityFromSpecHandle(this,Handle,BInstance)))
+			{
+				IIAct_AbilityInterface::Execute_SetTriggerTime(const_cast<UAct_Ability*>(Ability),ActionInstance.GetTriggeredTime());
+			}
+		}
+	}
 }
 bool UAct_AbilitySystemComponent::ChekcInputLengthToSetInputLock(float InputLength,const FInputActionInstance & ActionInstance,UInputDataAsset *InputDataAsset,FGameplayTag Inputtag)
 {//如果输入时间超过缓冲时间则设置输入锁。
@@ -207,13 +208,13 @@ void UAct_AbilitySystemComponent::OnInputFinal(const FAbilityInputInfo& InputInf
 {//TODO::进行对应内容的处理：
 	
 	if (InputInfo.InputTag==ActTagContainer::InputRelaxAttack)
-	{	
-		AbilityChainManager->ToNextNode(AbilityChainManager->SelectedNode,EAttackType::RelaxAttack,ICharacterInferface::Execute_GetCharacterUnAttackingState(GetOwner()));
+	{	UAct_AbilityChainChildNode * Temp=AbilityChainManager->SelectedNode.Get();
+		AbilityChainManager->ToNextNode(Temp,EAttackType::RelaxAttack,ICharacterInferface::Execute_GetCharacterUnAttackingState(GetOwner()));
 		
 	}
 	if (InputInfo.InputTag==ActTagContainer::InputHeavyAttack)
-	{
-		AbilityChainManager->ToNextNode(AbilityChainManager->SelectedNode,EAttackType::HeavyAttack,ICharacterInferface::Execute_GetCharacterUnAttackingState(GetOwner()));
+	{	UAct_AbilityChainChildNode * Temp=AbilityChainManager->SelectedNode.Get();
+		AbilityChainManager->ToNextNode(Temp,EAttackType::HeavyAttack,ICharacterInferface::Execute_GetCharacterUnAttackingState(GetOwner()));
 	}
 	if (InputInfo.InputTag==ActTagContainer::InputDefense)
 	{

@@ -29,5 +29,8 @@ namespace ActTagContainer
 	ACTIONDEMO_API UE_DECLARE_GAMEPLAY_TAG_EXTERN(ExeMulityInputExeAttack);
 	//打断角色技能的Tag
 	ACTIONDEMO_API UE_DECLARE_GAMEPLAY_TAG_EXTERN(ExeInterrupt);
+	//松开技能的Tag
+	ACTIONDEMO_API UE_DECLARE_GAMEPLAY_TAG_EXTERN(ExeHoldAbilityInputRelaxAttackReleased);
+	ACTIONDEMO_API UE_DECLARE_GAMEPLAY_TAG_EXTERN(ExeUnComboAbilityInputReleased);
 }
 

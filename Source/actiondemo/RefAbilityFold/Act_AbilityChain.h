@@ -28,7 +28,9 @@ public:
 	UPROPERTY()
 	TObjectPtr<UAct_AbilityChainChildNode>  NextHeavyAttack=nullptr;
 	//本节所存储的技能：
+	
 	TArray<FAct_AbilityTypes> SelfAbilityType;
+	UPROPERTY(BlueprintReadOnly)
 	int32 length=0;
 	//检查是否存在
 	bool CheckNextIsValid(EAttackType CheckType) const 
@@ -45,7 +47,7 @@ public:
 	void initialNode(FAct_AbilityTypes &  AbilityTypes,int32 lengths,UAct_AbilitySystemComponent*AbilitySystemComponent);
 //用来检查该节点正确的技能
 	bool  CheckCorrectAbilityTypes(const UAct_AbilitySystemComponent * AbilitySystemComponent,FAct_AbilityTypes &AbilityTypes) const;
-   bool OnGameplayChainIn(UAct_AbilitySystemComponent * AbilitySystemComponent);
+   bool OnGameplayChainIn(UAct_AbilitySystemComponent * AbilitySystemComponent,UAct_AbilityChainManager * ChainManager);
 };
 //作为技能树来设置
 UCLASS()
@@ -73,8 +75,8 @@ public:
 	UPROPERTY()
 	TMap<FGameplayTag,FGameplayAbilitySpecHandle> UnComboHandle;
 	//指向被选择分支的指针
-	UPROPERTY()
-	UAct_AbilityChainChildNode * SelectedNode;
+	UPROPERTY(BlueprintReadOnly)
+	TObjectPtr<UAct_AbilityChainChildNode> SelectedNode;
 	UPROPERTY()
 	FAct_AbilityTypes CurrentAbilityType;
 	//后面在角色那里绑一个函数
@@ -86,8 +88,7 @@ public:
 	UPROPERTY()
 	TObjectPtr<UAct_AbilitySystemComponent> AbilitySystemComponent;
 	//将分支传去下一个支
-	UFUNCTION()
-	virtual bool ToNextNode(UAct_AbilityChainChildNode * CurrentNode,EAttackType AttackType=EAttackType::RelaxAttack,ECharacterUnAttackingState CurrentState=ECharacterUnAttackingState::Normal);
+	virtual bool ToNextNode(UAct_AbilityChainChildNode *&CurrentNode,EAttackType AttackType=EAttackType::RelaxAttack,ECharacterUnAttackingState CurrentState=ECharacterUnAttackingState::Normal);
 	UFUNCTION()
 	virtual bool TurnToRoot();
 	//游戏开始时调用在AbilitySystemComponent中调用

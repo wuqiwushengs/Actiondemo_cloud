@@ -108,44 +108,44 @@ bool UAct_AbilityChainChildNode::CheckCorrectAbilityTypes(const UAct_AbilitySyst
 	return false;
 }
 //当进入这个技能组件的时候尝试执行技能。
-bool UAct_AbilityChainChildNode::OnGameplayChainIn(UAct_AbilitySystemComponent * AbilitySystemComponent)
+bool UAct_AbilityChainChildNode::OnGameplayChainIn(UAct_AbilitySystemComponent * AbilitySystemComponent,UAct_AbilityChainManager * ChainManager)
 {	FAct_AbilityTypes EnableAbilityTypes;
 	if (CheckCorrectAbilityTypes(AbilitySystemComponent,EnableAbilityTypes))
 	{
-		ICharacterInferface::Execute_GetCharacterInputData(AbilitySystemComponent->GetOwner());
 		bool Success=AbilitySystemComponent->TryActivateAbilityByClass(EnableAbilityTypes.Ability);
+		ChainManager->CurrentAbilityType=EnableAbilityTypes;
 		return Success;
 	}
 	return false;
 }
 #pragma endregion Act_AbilityChainRoot
-bool UAct_AbilityChainManager::ToNextNode(UAct_AbilityChainChildNode * CurrentNode,EAttackType AttackType,ECharacterUnAttackingState CurrentState)
+bool UAct_AbilityChainManager::ToNextNode(UAct_AbilityChainChildNode *& CurrentNode,EAttackType AttackType,ECharacterUnAttackingState CurrentState)
 {	//如果当前阶段的状态和当前的状态不一样那么久从新赋值
-
-	if (LastAbilityState!= CurrentState||!CurrentNode)
-	{
-		TObjectPtr<UAct_AbilityChainChildNode>& TempNode = (AttackType == EAttackType::RelaxAttack) 
-			? this->AbilityChainsRoot[CurrentState]->PrimaryRelaxAbilityHead 
-			: this->AbilityChainsRoot[CurrentState]->PrimaryHeavyAbilityHead;
-		CurrentNode = TempNode;
+	
+	if (LastAbilityState!= CurrentState||!SelectedNode)
+	{	
+		 CurrentNode= (AttackType == EAttackType::RelaxAttack) 
+			? this->AbilityChainsRoot[CurrentState]->PrimaryRelaxAbilityHead.Get() 
+			: this->AbilityChainsRoot[CurrentState]->PrimaryHeavyAbilityHead.Get();
 		if (!CurrentNode)return false;
-		CurrentNode->OnGameplayChainIn(AbilitySystemComponent);
+		CurrentNode->OnGameplayChainIn(AbilitySystemComponent,this);
 		LastAbilityState=CurrentState;
+		SelectedNode=CurrentNode;
 		return true;
 	}
 	//如果一样那么向检查，如过检查不到那么
-	TObjectPtr<UAct_AbilityChainChildNode>& TempNode = (AttackType == EAttackType::RelaxAttack) 
+	CurrentNode= (AttackType == EAttackType::RelaxAttack) 
 		? CurrentNode->NextRelaxAttack 
 		: CurrentNode->NextHeavyAttack;
 
-	if (!TempNode)
+	if (!CurrentNode)
 	{
 		TurnToRoot();
 		return ToNextNode(CurrentNode,AttackType,CurrentState);
 	}
-	CurrentNode = TempNode;
-	CurrentNode->OnGameplayChainIn(AbilitySystemComponent);
+	CurrentNode->OnGameplayChainIn(AbilitySystemComponent,this);
 	LastAbilityState=CurrentState;
+	SelectedNode=CurrentNode;
 	return true;
 	
 }
@@ -179,7 +179,6 @@ void UAct_AbilityChainManager::BeginConstruct(const UAct_AbilityDatasManager* da
 		FGameplayAbilitySpecHandle Handle=Act_AbilitySystemComponent->GiveAbility(Spec);
 		UnComboHandle.Add(Tag,Handle);
 	};
-	
 }
 
 

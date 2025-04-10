@@ -31,8 +31,8 @@ struct FAbilityInputInfo
 	EInputWeightType InputWeightType;
 };
 
-UENUM()
-enum class InputState
+UENUM(BlueprintType)
+enum class InputState:uint8
 {
 	//普通输入节点
 	NormalInputState,
@@ -88,7 +88,7 @@ public:
 	UPROPERTY(BlueprintReadWrite,EditDefaultsOnly)
 	float AbilityInputBuffTime=0.1f;
 	//通过设置此数据来对输入进行开锁或闭锁
-	UPROPERTY()
+	UPROPERTY(BlueprintReadOnly)
 	InputState CurrentInputType;
 	UFUNCTION()
 	void SetInputstate(InputState InputType);

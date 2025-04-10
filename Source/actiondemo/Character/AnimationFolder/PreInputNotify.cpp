@@ -6,16 +6,28 @@
 void UPreInputNotify::BranchingPointNotifyBegin(FBranchingPointNotifyPayload& BranchingPointPayload)
 {
 	Super::BranchingPointNotifyBegin(BranchingPointPayload);
-	AAct_Character * Character=Cast<AAct_Character>(BranchingPointPayload.SkelMeshComponent->GetOwner());
-	if (!Character)return;
-	Character->ActAbilitySystemComponent->SetInputstate(InputState::PreInputState);
+	
 }
 
 void UPreInputNotify::BranchingPointNotifyEnd(FBranchingPointNotifyPayload& BranchingPointPayload)
 {
 	Super::BranchingPointNotifyEnd(BranchingPointPayload);
-	AAct_Character * Character=Cast<AAct_Character>(BranchingPointPayload.SkelMeshComponent->GetOwner());
+
+	
+}
+
+void UPreInputNotify::NotifyBegin(USkeletalMeshComponent* MeshComp, UAnimSequenceBase* Animation, float TotalDuration, const FAnimNotifyEventReference& EventReference)
+{
+	Super::NotifyBegin(MeshComp, Animation, TotalDuration,EventReference);
+	AAct_Character * Character=Cast<AAct_Character>(MeshComp->GetOwner());
+	if (!Character)return;
+	Character->ActAbilitySystemComponent->SetInputstate(InputState::PreInputState);
+}
+
+void UPreInputNotify::NotifyEnd(USkeletalMeshComponent* MeshComp, UAnimSequenceBase* Animation, const FAnimNotifyEventReference& EventReference)
+{
+	Super::NotifyEnd(MeshComp, Animation,EventReference);
+	AAct_Character * Character=Cast<AAct_Character>(MeshComp->GetOwner());
 	if (!Character)return;
 	Character->ActAbilitySystemComponent->SetInputstate(InputState::DisableInputState);
-	
 }
