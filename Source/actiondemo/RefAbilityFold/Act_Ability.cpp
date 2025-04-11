@@ -23,14 +23,12 @@ void UAct_Ability::PreActivate(const FGameplayAbilitySpecHandle Handle, const FG
 	{
 		PreMontageTask->OnCompleted.AddDynamic(this,&UAct_Ability::OnEndAbility);
 	}
-	PreMontageTask->ReadyForActivation();
 	check(PreMontageTask);
 	//技能蓄力阶段的任务
 	if (HoldMontage)
 	{
 		HoldMontageTask=UAbilityTask_PlayMontageAndWait::CreatePlayMontageAndWaitProxy(this,NAME_None,HoldMontage,1.f,NAME_None,1.f);
 		HoldMontageTask->OnInterrupted.AddDynamic(this,&UAct_Ability::HandleMontageInterrupted);
-		HoldMontageTask->ReadyForActivation();
 		check(HoldMontage)
 	}
 	
@@ -43,7 +41,6 @@ void UAct_Ability::PreActivate(const FGameplayAbilitySpecHandle Handle, const FG
 		ContinueMontageTask->OnBlendOut.AddDynamic(this,&UAct_Ability::TurnToPostMontage);
 		//当动画被插入的时候则先处理蒙太奇混出
 		ContinueMontageTask->OnInterrupted.AddDynamic(this,&UAct_Ability::HandleMontageInterrupted);
-		ContinueMontageTask->ReadyForActivation();
 		check(ContinueMontage);
 	}
 	
@@ -57,7 +54,6 @@ void UAct_Ability::ActivateAbility(const FGameplayAbilitySpecHandle Handle, cons
 		ContinueTagTask=UAbilityTask_WaitGameplayEvent::WaitGameplayEvent(this,ActTagContainer::ExeMulityInputRelaxAttack);
 		ContinueTagTask->EventReceived.AddDynamic(this,&UAct_Ability::OnContinueTagReceived);
 		ContinueTagTask->Activate();
-		
 	}
 	if (HoldMontage)
 	{
@@ -99,33 +95,26 @@ void UAct_Ability::HandleMontageInterrupted()
 void UAct_Ability::OnContinueTagReceived(FGameplayEventData EventData)
 {   if (EventData.EventTag==ActTagContainer::ExeMulityInputRelaxAttack&&bIsContinueMontage)
 	{
-		if (ContinueMontageTask->IsActive()&&!bIsPressed)
+		if (!bIsPressed)
 		{
 			bIsPressed=true;
-		}
-		//如果是连续打击的tag则判断其什么时候执行
-		if (!ContinueMontageTask)
-		{
-			ContinueMontageTask->Activate();
-			OnContinuePressed();
-			
 		}
 	}
 }
 void UAct_Ability::TurnToPostMontage()
 {	//当为真时则继续播放攻击动画
-	GEngine->AddOnScreenDebugMessage(-1,1,FColor::Black,TEXT("HELLO"));
+	
 	if (bIsPressed)
-	{	ContinueMontageTask->EndTask();
+	{	
 		ContinueMontageTask=UAbilityTask_PlayMontageAndWait::CreatePlayMontageAndWaitProxy(this,NAME_None,ContinueMontage,1.f,NAME_None,1.f);
 		//当动画混出的时候则播放后摇
 		ContinueMontageTask->OnBlendOut.AddDynamic(this,&UAct_Ability::TurnToPostMontage);
 		//当动画被插入的时候则先处理蒙太奇混出
 		ContinueMontageTask->OnInterrupted.AddDynamic(this,&UAct_Ability::HandleMontageInterrupted);
-		ContinueMontageTask->ReadyForActivation();
 		ContinueMontageTask->Activate();
 		OnContinuePressed();
 		bIsPressed=false;
+		return;
 		
 	}
 	//当不是连打动画时则播放后摇
@@ -135,9 +124,9 @@ void UAct_Ability::TurnToPostMontage()
 		PostMontageTask->OnCompleted.AddDynamic(this,&UAct_Ability::OnEndAbility);
 		PostMontageTask->OnCancelled.AddDynamic(this,&UAct_Ability::OnEndAbility);
 		PostMontageTask->OnInterrupted.AddDynamic(this,&UAct_Ability::OnEndAbility);
-		PostMontageTask->ReadyForActivation();
 		PostMontageTask->Activate();
 		OnPostPressed();
+		return;
 	}
 }
 void UAct_Ability::OnContinuePressed()
@@ -166,7 +155,7 @@ void UAct_Ability::PreHandleMontageBlendout()
 		PostMontageTask->OnCompleted.AddDynamic(this,&UAct_Ability::OnEndAbility);
 		PostMontageTask->OnCancelled.AddDynamic(this,&UAct_Ability::OnEndAbility);
 		PostMontageTask->OnInterrupted.AddDynamic(this,&UAct_Ability::OnEndAbility);
-		PostMontageTask->ReadyForActivation();
+		PostMontageTask->Activate();
 		OnPostPressed();
 	}
 }
@@ -206,11 +195,9 @@ void UAct_Ability::OnHoldEnded(FGameplayEventData EventData)
 			PostMontageTask->OnCompleted.AddDynamic(this,&UAct_Ability::OnEndAbility);
 			PostMontageTask->OnCancelled.AddDynamic(this,&UAct_Ability::OnEndAbility);
 			PostMontageTask->OnInterrupted.AddDynamic(this,&UAct_Ability::OnEndAbility);
-			PostMontageTask->ReadyForActivation();
 			PostMontageTask->Activate();
 			OnPostPressed();
 		}
-		GEngine->AddOnScreenDebugMessage(-1,1,FColor::Black,TEXT("helloworld"));
 		
 	}
 	

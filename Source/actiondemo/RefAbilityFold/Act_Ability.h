@@ -31,7 +31,7 @@ public:
 	UPROPERTY()
 	UAbilityAsync_WaitGameplayEvent *EventOnRealsed;
 	UPROPERTY()
-	float AbilityTriggerTime;
+	float AbilityTriggerTime=0.0f;
 	UPROPERTY()
 	bool bIsTriggerTimeSet;
 	UPROPERTY(EditDefaultsOnly)
@@ -61,7 +61,7 @@ public:
 	UAnimMontage* HoldMontage;
 	//按下多久开启下一个等级的蓄力。后面可能会扩展
 	UPROPERTY()
-	float HoldUpLevelTime;
+	float HoldUpLevelTime=0.0f;
 	UFUNCTION()
 	void OnHoldEnded(FGameplayEventData EventData);
 	UFUNCTION()
