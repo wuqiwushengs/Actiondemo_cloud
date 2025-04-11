@@ -26,19 +26,15 @@ public:
 	virtual void EndAbility(const FGameplayAbilitySpecHandle Handle, const FGameplayAbilityActorInfo* ActorInfo, const FGameplayAbilityActivationInfo ActivationInfo, bool bReplicateEndAbility, bool bWasCancelled) override;
 	UFUNCTION()
 	void OnEndAbility();
-	virtual void OnAbilityTrigger(float AbilityTime=0) override;
 #pragma region TimeInformation
 	UPROPERTY()
-	UAbilityAsync_WaitGameplayEvent *EventOnRealsed;
+	UAbilityTask_WaitGameplayEvent *EventOnRealsed;
 	UPROPERTY()
 	float AbilityTriggerTime=0.0f;
-	UPROPERTY()
-	bool bIsTriggerTimeSet;
 	UPROPERTY(EditDefaultsOnly)
 	float AbilityMinHoldTime=0.5f;
 	UPROPERTY()
 	bool BExexute;
-	virtual void SetTriggerTime_Implementation(float TriggerTime) override;
 #pragma endregion
 #pragma region Animation
 #pragma  region Pre
@@ -57,15 +53,18 @@ public:
 	UPROPERTY()
 	UAbilityTask_PlayMontageAndWait* HoldMontageTask;
 	//如果不需要蓄力则不填即可，但这个取决于之前设置的这个键位是否有蓄力能力，假如有蓄力能力则最好填上，当然也可以逻辑里自己调整
-	UPROPERTY(EditDefaultsOnly)
+	UPROPERTY(EditDefaultsOnly,meta=(EditCondition="bHoldMontage"))
 	UAnimMontage* HoldMontage;
 	//按下多久开启下一个等级的蓄力。后面可能会扩展
 	UPROPERTY()
-	float HoldUpLevelTime=0.0f;
+	float HoldUpLevelTime=1.0f;
+	UPROPERTY(EditDefaultsOnly)
+	bool bHoldMontage;
 	UFUNCTION()
 	void OnHoldEnded(FGameplayEventData EventData);
 	UFUNCTION()
 	virtual void OnHoldPressed() ;
+	bool bTick=false;
 #pragma endregion Hold
 #pragma region Continue
 	//技能在连续打击阶段的任务：需要判断是否是连续打击
@@ -93,7 +92,7 @@ public:
 	//技能后摇阶段的任务：需要判断是否有后摇
 	UPROPERTY()
 	UAbilityTask_PlayMontageAndWait* PostMontageTask;
-	UPROPERTY(EditDefaultsOnly)
+	UPROPERTY(EditDefaultsOnly,meta=(EditCondition="bHoldMontage"))
 	TMap<int32,UAnimMontage*>HoldPostMontage;
 	//这个是必填的这个是假如单击的话他的后摇动画是什么。
 	UPROPERTY(EditDefaultsOnly)

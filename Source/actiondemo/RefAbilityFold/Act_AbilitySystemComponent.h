@@ -64,7 +64,7 @@ public:
 	UFUNCTION(BlueprintCallable, Category="InputDeal")
 	void ProcessingInputDataComplete(const FInputActionInstance& ActionInstance,FGameplayTag Inputag, UInputDataAsset * InputDataAsset);
 	UFUNCTION(BlueprintCallable, Category="InputDeal")
-	void ProcessingInputDataTrigger(const FInputActionInstance& ActionInstance,FGameplayTag Inputag, UInputDataAsset * InputDataAsset);
+	void ProcessingInputDataTrigger(const FInputActionInstance& ActionInstance,FGameplayTag Inputag, UInputDataAsset * InputDataAsset,float TriggerTime);
 	//InputLockFunction
 	//仅仅用在输入时
 	UFUNCTION()
@@ -81,6 +81,8 @@ public:
 	UFUNCTION(BlueprintCallable)
 	void OnInputFinal(const FAbilityInputInfo& InputInfo);
 #pragma region AbilityInputProcess
+	UPROPERTY()
+	float CurrentHoldTime=0.0f;
 	//缓冲区记录输入的tag
 	UPROPERTY(BlueprintReadOnly)
 	TArray<FAbilityInputInfo> InputTagsInbuff;

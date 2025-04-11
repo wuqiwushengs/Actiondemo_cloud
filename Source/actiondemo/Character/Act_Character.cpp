@@ -111,8 +111,6 @@ void AAct_Character::LockSystem(const FInputActionValue& InputAction)
 
 void AAct_Character::BindSkill(const FInputActionInstance& ActionInstance, FGameplayTag Inputag)
 {	
-	if (InputDataAsset)
-	{
 		if (ActionInstance.GetTriggerEvent()==ETriggerEvent::Started)
 		{
 			GetAct_AbilitySystemComponent()->ProcessingInputDataStarted(ActionInstance,Inputag,InputDataAsset);
@@ -121,11 +119,12 @@ void AAct_Character::BindSkill(const FInputActionInstance& ActionInstance, FGame
 		{
 			GetAct_AbilitySystemComponent()->ProcessingInputDataComplete(ActionInstance,Inputag,InputDataAsset);
 		}
+		
 		if (ActionInstance.GetTriggerEvent()==ETriggerEvent::Ongoing)
-		{
-			GetAct_AbilitySystemComponent()->ProcessingInputDataTrigger(ActionInstance,Inputag,InputDataAsset);
+		{	
+			GetAct_AbilitySystemComponent()->ProcessingInputDataTrigger(ActionInstance,Inputag,InputDataAsset,ActionInstance.GetElapsedTime());
 		}
-	}
+	
 	
 }
 

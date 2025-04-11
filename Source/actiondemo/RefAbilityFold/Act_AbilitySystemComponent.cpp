@@ -105,16 +105,18 @@ void UAct_AbilitySystemComponent::ProcessingInputDataComplete(const FInputAction
 	{		//处理用sendgameplaytag;
 		UAbilitySystemBlueprintLibrary::SendGameplayEventToActor(GetOwner(),ActTagContainer::ExeUnComboAbilityInputReleased,FGameplayEventData());
 	}
-	if (AbilityChainManager->CurrentAbilityType.InputTag==Inputag&&ActionInstance.GetElapsedTime()>0.2)
+	
+	if (AbilityChainManager->CurrentAbilityType.InputTag==Inputag&&ActionInstance.GetElapsedTime()>0.5)
 	{
-		
 		UAbilitySystemBlueprintLibrary::SendGameplayEventToActor(GetOwner(),ActTagContainer::ExeHoldAbilityInputRelaxAttackReleased,FGameplayEventData());
+		CurrentHoldTime=0.0f;
 	}
 }
 
 void UAct_AbilitySystemComponent::ProcessingInputDataTrigger(const FInputActionInstance& ActionInstance,
-	FGameplayTag Inputag, UInputDataAsset* InputDataAsset)
-{	FGameplayAbilitySpecHandle Handle;
+	FGameplayTag Inputag, UInputDataAsset* InputDataAsset,float TriggerTime)
+{	
+	FGameplayAbilitySpecHandle Handle;
 	if (AbilityChainManager->UnComboHandle.Find(Inputag))
 	{
 		Handle=*AbilityChainManager->UnComboHandle.Find(Inputag);
@@ -124,7 +126,9 @@ void UAct_AbilitySystemComponent::ProcessingInputDataTrigger(const FInputActionI
 			bool BInstance=false;
 			if (const UAct_Ability * Ability=Cast<UAct_Ability>(UAbilitySystemBlueprintLibrary::GetGameplayAbilityFromSpecHandle(this,Handle,BInstance)))
 			{
-				IIAct_AbilityInterface::Execute_SetTriggerTime(const_cast<UAct_Ability*>(Ability),ActionInstance.GetElapsedTime());
+				IIAct_AbilityInterface::Execute_SetTriggerTime(const_cast<UAct_Ability*>(Ability),TriggerTime);
+				
+				
 			}
 		}
 	}
@@ -135,10 +139,8 @@ void UAct_AbilitySystemComponent::ProcessingInputDataTrigger(const FInputActionI
 		if (Handle.IsValid()&&InputDataAsset->GetAbilityInputDatabyTag(Inputag).bCanHold)
 		{
 			bool BInstance=false;
-			if (const UAct_Ability * Ability=Cast<UAct_Ability>(UAbilitySystemBlueprintLibrary::GetGameplayAbilityFromSpecHandle(this,Handle,BInstance)))
-			{
-				IIAct_AbilityInterface::Execute_SetTriggerTime(const_cast<UAct_Ability*>(Ability),ActionInstance.GetTriggeredTime());
-			}
+			CurrentHoldTime=TriggerTime;
+			
 		}
 	}
 }
