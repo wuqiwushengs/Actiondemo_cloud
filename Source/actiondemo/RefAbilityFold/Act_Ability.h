@@ -54,7 +54,9 @@ public:
 	UAbilityTask_PlayMontageAndWait* HoldMontageTask;
 	//如果不需要蓄力则不填即可，但这个取决于之前设置的这个键位是否有蓄力能力，假如有蓄力能力则最好填上，当然也可以逻辑里自己调整
 	UPROPERTY(EditDefaultsOnly,meta=(EditCondition="bHoldMontage"))
-	UAnimMontage* HoldMontage;
+	UAnimMontage* PreHoldMontage;
+	UPROPERTY(EditDefaultsOnly,meta=(EditCondition="bHoldMontage"))
+	UAnimMontage * HoldMontage;
 	//按下多久开启下一个等级的蓄力。后面可能会扩展
 	UPROPERTY()
 	float HoldUpLevelTime=1.0f;
@@ -65,6 +67,8 @@ public:
 	UFUNCTION()
 	virtual void OnHoldPressed() ;
 	bool bTick=false;
+	UFUNCTION()
+	void TurnTohold();
 #pragma endregion Hold
 #pragma region Continue
 	//技能在连续打击阶段的任务：需要判断是否是连续打击
@@ -97,7 +101,7 @@ public:
 	//这个是必填的这个是假如单击的话他的后摇动画是什么。
 	UPROPERTY(EditDefaultsOnly)
 	UAnimMontage* NormalPostMontage;
-	UPROPERTY(EditDefaultsOnly)
+	UPROPERTY(EditDefaultsOnly,meta=(EditCondition="bisContinueMontage"))
 	UAnimMontage* PostContinueMontage;
 	//保证Interupt安全的方式
 	UFUNCTION()

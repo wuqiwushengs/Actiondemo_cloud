@@ -26,11 +26,23 @@ void UAct_Ability::PreActivate(const FGameplayAbilitySpecHandle Handle, const FG
 	}
 	check(PreMontageTask);
 	//技能蓄力阶段的任务
-	if (HoldMontage)
+	if (bHoldMontage)
 	{
-		HoldMontageTask=UAbilityTask_PlayMontageAndWait::CreatePlayMontageAndWaitProxy(this,NAME_None,HoldMontage,1.f,NAME_None,1.f);
-		HoldMontageTask->OnInterrupted.AddDynamic(this,&UAct_Ability::HandleMontageInterrupted);
-		check(HoldMontage)
+		if (PreHoldMontage)
+		{
+			HoldMontageTask=UAbilityTask_PlayMontageAndWait::CreatePlayMontageAndWaitProxy(this,NAME_None,PreHoldMontage,1.f,NAME_None,1.f);
+			HoldMontageTask->OnInterrupted.AddDynamic(this,&UAct_Ability::HandleMontageInterrupted);
+			HoldMontageTask->OnBlendOut.AddDynamic(this,&UAct_Ability::TurnTohold);
+			check(HoldMontage)
+			
+		}
+		if (!PreHoldMontage&&HoldMontage)
+		{
+			HoldMontageTask=UAbilityTask_PlayMontageAndWait::CreatePlayMontageAndWaitProxy(this,NAME_None,HoldMontage,1.f,NAME_None,1.f);
+			HoldMontageTask->OnInterrupted.AddDynamic(this,&UAct_Ability::HandleMontageInterrupted);
+			check(HoldMontage)
+		}
+		
 	}
 	
 	//当允许连续打击时创建这个任务
@@ -202,6 +214,15 @@ void UAct_Ability::OnHoldEnded(FGameplayEventData EventData)
 
 void UAct_Ability::OnHoldPressed()
 {
+}
+
+void UAct_Ability::TurnTohold()
+{
+	HoldMontageTask=UAbilityTask_PlayMontageAndWait::CreatePlayMontageAndWaitProxy(this,NAME_None,HoldMontage,1.f,NAME_None,1.f);
+	HoldMontageTask->OnInterrupted.AddDynamic(this,&UAct_Ability::HandleMontageInterrupted);
+	check(HoldMontage)
+	HoldMontageTask->Activate();
+	
 }
 #pragma endregion Hold
 //动画被插入时的处理
