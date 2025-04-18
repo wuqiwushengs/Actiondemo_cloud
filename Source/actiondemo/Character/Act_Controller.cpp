@@ -2,15 +2,10 @@
 
 
 #include "Act_Controller.h"
-
 #include "Act_Character.h"
 #include "actiondemo/InputFold/Act_InputComponent.h"
 
 
-AAct_Controller::AAct_Controller()
-{
-	
-}
 
 void AAct_Controller::OnPossess(APawn* InPawn)
 {
@@ -34,6 +29,7 @@ void AAct_Controller::OnPossess(APawn* InPawn)
 		check(LookAroundActon);
 		check(LockAction);
 		EnhancedInputComponent->BindAction(MoveAction,ETriggerEvent::Triggered,RefPlayer,&AAct_Character::MoveAround);
+		EnhancedInputComponent->BindAction(LookAroundActon,ETriggerEvent::Completed,RefPlayer,&AAct_Character::OnlookAroundEnd);
 		EnhancedInputComponent->BindAction(LookAroundActon,ETriggerEvent::Triggered,RefPlayer,&AAct_Character::LookAround);
 		EnhancedInputComponent->BindAction(LockAction,ETriggerEvent::Started,RefPlayer,&AAct_Character::LockSystem);
 		if (InputDataAsset->AbilityInputData.Num()>0)

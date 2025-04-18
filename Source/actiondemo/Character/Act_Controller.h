@@ -4,8 +4,6 @@
 
 #include "CoreMinimal.h"
 #include "GameFramework/PlayerController.h"
-#include "EnhancedInputComponent.h"
-#include "actiondemo/Act_TagContainer.h"
 #include "EnhancedInputSubsystems.h"
 #include "actiondemo/InputDataAsset.h"
 #include "Act_Controller.generated.h"
@@ -18,7 +16,6 @@ class ACTIONDEMO_API AAct_Controller : public APlayerController
 {
 	GENERATED_BODY()
 public:
-	AAct_Controller();
 	UPROPERTY(EditDefaultsOnly,BlueprintReadWrite,Category="InputSetting")
 	TObjectPtr<UInputDataAsset> InputDataAsset;
 	UPROPERTY(EditDefaultsOnly,BlueprintReadWrite,Category="InputSetting")

@@ -44,10 +44,42 @@ public:
 	//Character Interface End
 	//CameraInit(temp)
 	//@TODO:CreateCameraSystem;
+	
+#pragma region CameraSystem
+	//CameraSystem
+	//当遇到强敌时，通过系统自动锁定敌人，不允许角色自由转换视角。
+	UPROPERTY()
+	bool CanMovAroundFree=true;
+	UFUNCTION()
+	void OnlookAroundEnd(const FInputActionValue& InputAction);
 	UPROPERTY(EditDefaultsOnly,BlueprintReadWrite,Category="Camera")
 	TObjectPtr<USpringArmComponent> SpringArmComponent;
 	UPROPERTY(EditDefaultsOnly,BlueprintReadWrite,Category="Camera")
 	TObjectPtr<UCameraComponent>CameraComponent;
+	float PitchSum;
+	bool bForward=false;
+	FVector2D InputValue;
+	bool LockOnce=false;
+	UFUNCTION()
+	void CheckMovemntInfo();
+	UPROPERTY(EditDefaultsOnly)
+	TObjectPtr<UCurveFloat> CameraCurve;
+	//当长时间朝着同一个方向移动时自动将摄像机转向角色背后。
+	UPROPERTY(EditDefaultsOnly)
+	float AutoTurnThresholdTime=1.5;
+	UPROPERTY()
+	float CurrentHoldTime=0;
+	bool bStartTurn=false;
+	UPROPERTY(DisplayName="LongtimeMovementSaveDirection")
+	EEigthDirectionState LastDirectionState=EEigthDirectionState::None;
+	UPROPERTY(DisplayName="LongtimeMovementSaveDirection")
+	EEigthDirectionState CurrentDirectionState=EEigthDirectionState::None;
+	UFUNCTION(BlueprintCallable,BlueprintPure,Category="LongtimeMovementSaveDirection")
+	EEigthDirectionState  CalculateMovementDirection();
+	UFUNCTION()
+	bool TurnToController();
+#pragma endregion CameraSystem
+	
 	// Called to bind functionality to input
 	virtual void SetupPlayerInputComponent(class UInputComponent* PlayerInputComponent) override;
 //InputBind
@@ -73,4 +105,5 @@ public:
 	ECharacterState CharacterState=ECharacterState::UnAttacking;
 	UPROPERTY(EditDefaultsOnly,BlueprintReadWrite,Category="Playerstate")
 	ECharacterUnAttackingState CharacterUnAttackingState=ECharacterUnAttackingState::Normal;
+#pragma endregion PlayerState
 };

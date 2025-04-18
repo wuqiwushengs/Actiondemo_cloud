@@ -15,3 +15,16 @@ enum class ECharacterUnAttackingState:uint8
 	Defense,
 	Rolling,
 };
+UENUM(BlueprintType)
+enum class  EEigthDirectionState:uint8
+{
+	Forward,
+	Backward,
+	Left,
+	Right,
+	ForwardLeft,
+	ForwardRight,
+	BackwardLeft,
+	BackwardRight,
+	None,
+};

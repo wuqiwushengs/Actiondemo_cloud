@@ -154,6 +154,7 @@ void UAct_Ability::PreHandleMontageBlendout()
 	{
 		ContinueMontageTask->Activate();
 		OnContinuePressed();
+		BExexute=true;
 		return;
 	}
 	if (NormalPostMontage)
