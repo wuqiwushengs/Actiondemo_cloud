@@ -4,7 +4,7 @@ namespace ActTagContainer
 {
 	ACTIONDEMO_API UE_DEFINE_GAMEPLAY_TAG(CharacterMoveAround,"NativeInput.MoveAround");
 	ACTIONDEMO_API UE_DEFINE_GAMEPLAY_TAG(CharacterCameraMoveAround,"NativeInput.CameraMoveAround")
-	ACTIONDEMO_API UE_DEFINE_GAMEPLAY_TAG(AbilityTest,"Ability.AbilityTest")
+	ACTIONDEMO_API UE_DEFINE_GAMEPLAY_TAG(InputRestController,"NativeInput.RestController")
 	ACTIONDEMO_API UE_DEFINE_GAMEPLAY_TAG(InputRelaxAttack,"AttackStatement.Attack.Input.RelaxAttack")
 	ACTIONDEMO_API UE_DEFINE_GAMEPLAY_TAG(InputHeavyAttack,"AttackStatement.Attack.Input.HeavyAttack")
 	ACTIONDEMO_API UE_DEFINE_GAMEPLAY_TAG(LockTarget,"AttackStatement.LockTarget")
@@ -22,5 +22,6 @@ namespace ActTagContainer
 	ACTIONDEMO_API UE_DEFINE_GAMEPLAY_TAG(ExeMulityInputExeAttack,"Input.Manage.ExeMutualityInputExeAttack");
 	ACTIONDEMO_API UE_DEFINE_GAMEPLAY_TAG(ExeHoldAbilityInputRelaxAttackReleased,"Input.Manage.ExeHoldAbilityInputRelaxAttackReleased");
 	ACTIONDEMO_API UE_DEFINE_GAMEPLAY_TAG(ExeUnComboAbilityInputReleased,"Input.Manage.ExeUnComboAbilityInputReleased");
+	
 	
 }

@@ -5,9 +5,10 @@
 #include "GameFramework/SpringArmComponent.h"
 #include "KismetAnimationLibrary.h"
 #include "Camera/CameraComponent.h"
+#include "Components/ArrowComponent.h"
 #include "GameFramework/CharacterMovementComponent.h"
 #include "Kismet/KismetMathLibrary.h"
-
+#include "Kismet/KismetSystemLibrary.h"
 
 
 // Sets default values
@@ -35,7 +36,17 @@ void AAct_Character::BeginPlay()
 // Called every frame
 void AAct_Character::Tick(float DeltaTime)
 {	Super::Tick(DeltaTime);
-	CheckMovemntInfo();
+	//视角处理的内容：
+	if (!Enemy)
+	{
+		CheckMovemntInfo();
+		checkCameraCollision();
+	}
+	if (Enemy)
+	{
+		FollowingEnemy();
+	}
+	
 }
 
 UAbilitySystemComponent* AAct_Character::GetAbilitySystemComponent() const 
@@ -73,8 +84,14 @@ void AAct_Character::CheckMovemntInfo()
 {
 #pragma  region NormalMovement
 	FVector Velocity=GetCharacterMovement()->GetLastUpdateVelocity();
-	if (!Velocity.IsZero()&&!bStartTurn)
-	{	LastDirectionState=CurrentDirectionState;
+	if (CharacterState==ECharacterState::Attacking)
+	{	
+		return ;
+	}
+	if (!Velocity.IsZero()&&!bStartTurn&&!GetMesh()->IsPlayingRootMotion())
+	{
+		
+		LastDirectionState=CurrentDirectionState;
 		CurrentDirectionState=CalculateMovementDirection();
 		//如果当前方向和上次方向相同并且没有开始旋转，则增加计时
 		if (CurrentDirectionState==LastDirectionState)
@@ -141,7 +158,7 @@ bool AAct_Character::TurnToController()
 	{	 SpringArmComponent->CameraRotationLagSpeed=5;
 		return true;
 	}	//当转换视角之后，因为控制器的旋转导致角色的移动方向和输入值不一致,会导致方向不同。需要直接更改输入值为向前，然后等待这个数值变更时再进行变化。
-		GetLocalViewingPlayerController()->SetControlRotation(GetCharacterMovement()->GetLastUpdateVelocity().Rotation());
+		GetLocalViewingPlayerController()->SetControlRotation(GetActorRotation());
 	    SpringArmComponent->CameraRotationLagSpeed=10;
 		bForward=true;
 		if (FMath::Abs(CameraComponent->GetComponentRotation().Yaw-GetActorRotation().Yaw)<10)
@@ -149,6 +166,54 @@ bool AAct_Character::TurnToController()
 			return true;
 		}
 	    return false;
+}
+
+void AAct_Character::checkCameraCollision()
+{
+	TArray<AActor*> IgnoreActor;
+	TArray<FHitResult> HitResults;
+	UKismetSystemLibrary::SphereTraceMulti(this,CameraComponent->GetComponentLocation(),
+		CameraComponent->GetComponentLocation()+GetControlRotation().Vector(),30.0f,ETraceTypeQuery::TraceTypeQuery3,
+		false,IgnoreActor,EDrawDebugTrace::None,HitResults,false);
+	for (FHitResult & Result:HitResults)
+	{
+		if (!Result.bBlockingHit||bStartTurn) return;
+		bool HitCharacter=Result.GetComponent()->ComponentHasTag(FName("Player"));
+		if (HitCharacter)
+		{
+			if (!GetCharacterMovement()->Velocity.IsZero())
+			{
+				bStartTurn=true;
+				return;
+			}
+			GetLocalViewingPlayerController()->SetControlRotation(GetActorRotation());
+			
+			
+		}
+	}
+}
+
+void AAct_Character::FollowingEnemy()
+{
+	FVector EnemyLocation=Enemy->GetActorLocation();
+	FRotator Rotation= UKismetMathLibrary::FindLookAtRotation(CameraComponent->GetComponentLocation(),EnemyLocation);
+	GetLocalViewingPlayerController()->SetControlRotation(Rotation);
+}
+
+void AAct_Character::MeetBoss(AActor* Boss)
+{
+	Enemy=Boss;
+	CanMovAroundFree=false;
+	SpringArmComponent->TargetArmLength=SpringArmDefaultValue[1].ArmLength;
+	SpringArmComponent->SocketOffset=SpringArmDefaultValue[1].slotoffset;
+}
+
+void AAct_Character::BossLeave()
+{
+	Enemy=nullptr;
+	CanMovAroundFree=true;
+	SpringArmComponent->TargetArmLength=SpringArmDefaultValue[0].ArmLength;
+	SpringArmComponent->SocketOffset=SpringArmDefaultValue[0].slotoffset;
 }
 #pragma endregion LongtimeMovementSaveDirection
 	
@@ -225,7 +290,15 @@ void AAct_Character::LockSystem(const FInputActionValue& InputAction)
 	
 }
 
-
+void AAct_Character::ResetController(const FInputActionValue& InputAction)
+{
+	if (!Enemy)
+	{
+		bStartTurn=true;
+		bForward=true;
+	}
+	
+}
 void AAct_Character::BindSkill(const FInputActionInstance& ActionInstance, FGameplayTag Inputag)
 {	
 		if (ActionInstance.GetTriggerEvent()==ETriggerEvent::Started)

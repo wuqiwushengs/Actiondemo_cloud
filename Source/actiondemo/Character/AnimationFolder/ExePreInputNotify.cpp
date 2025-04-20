@@ -5,6 +5,11 @@
 
 #include "actiondemo/Character/Act_Character.h"
 
+FLinearColor UExePreInputNotify::GetEditorColor()
+{
+	return FLinearColor::Red;
+}
+
 void UExePreInputNotify::BranchingPointNotifyBegin(FBranchingPointNotifyPayload& BranchingPointPayload)
 {
 	Super::BranchingPointNotifyBegin(BranchingPointPayload);

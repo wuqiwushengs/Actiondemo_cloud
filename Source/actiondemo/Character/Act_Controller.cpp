@@ -25,14 +25,17 @@ void AAct_Controller::OnPossess(APawn* InPawn)
 		UInputAction*  MoveAction=InputDataAsset->GetNativeInputActionBytag(ActTagContainer::CharacterMoveAround);
 		UInputAction*  LookAroundActon=InputDataAsset->GetNativeInputActionBytag(ActTagContainer::CharacterCameraMoveAround);
 		UInputAction* LockAction=InputDataAsset->GetNativeInputActionBytag(ActTagContainer::LockTarget);
+		UInputAction* RestController=InputDataAsset->GetNativeInputActionBytag(ActTagContainer::InputRestController);
 		check(MoveAction);
 		check(LookAroundActon);
 		check(LockAction);
+		check(RestController);
 		EnhancedInputComponent->BindAction(MoveAction,ETriggerEvent::Triggered,RefPlayer,&AAct_Character::MoveAround);
 		EnhancedInputComponent->BindAction(LookAroundActon,ETriggerEvent::Completed,RefPlayer,&AAct_Character::OnlookAroundEnd);
 		EnhancedInputComponent->BindAction(LookAroundActon,ETriggerEvent::Triggered,RefPlayer,&AAct_Character::LookAround);
 		EnhancedInputComponent->BindAction(LockAction,ETriggerEvent::Started,RefPlayer,&AAct_Character::LockSystem);
-		if (InputDataAsset->AbilityInputData.Num()>0)
+		EnhancedInputComponent->BindAction(RestController,ETriggerEvent::Started,RefPlayer,&AAct_Character::ResetController);
+	if (InputDataAsset->AbilityInputData.Num()>0)
 		{	EnhancedInputSubSystem->AddMappingContext(AbilityInputMappingContext,0);
 			EnhancedInputComponent->BindAbilityFunctions(InputDataAsset->AbilityInputData,RefPlayer,&AAct_Character::BindSkill);
 		}

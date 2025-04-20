@@ -50,6 +50,8 @@ public:
 	//当遇到强敌时，通过系统自动锁定敌人，不允许角色自由转换视角。
 	UPROPERTY()
 	bool CanMovAroundFree=true;
+	UPROPERTY(BlueprintReadWrite)
+	TObjectPtr<AActor> Enemy;
 	UFUNCTION()
 	void OnlookAroundEnd(const FInputActionValue& InputAction);
 	UPROPERTY(EditDefaultsOnly,BlueprintReadWrite,Category="Camera")
@@ -70,14 +72,26 @@ public:
 	UPROPERTY()
 	float CurrentHoldTime=0;
 	bool bStartTurn=false;
-	UPROPERTY(DisplayName="LongtimeMovementSaveDirection")
+	UPROPERTY(BlueprintReadOnly,DisplayName="LongtimeMovementSaveDirection")
 	EEigthDirectionState LastDirectionState=EEigthDirectionState::None;
-	UPROPERTY(DisplayName="LongtimeMovementSaveDirection")
+	UPROPERTY(BlueprintReadOnly,DisplayName="LongtimeMovementSaveDirection")
 	EEigthDirectionState CurrentDirectionState=EEigthDirectionState::None;
 	UFUNCTION(BlueprintCallable,BlueprintPure,Category="LongtimeMovementSaveDirection")
 	EEigthDirectionState  CalculateMovementDirection();
+	//旋转到角色面朝方向
 	UFUNCTION()
 	bool TurnToController();
+    UFUNCTION()
+	void checkCameraCollision();
+	UFUNCTION()
+	void FollowingEnemy();
+	//当遇上强敌就用这两个函数来锁定到角色身上。
+	UFUNCTION(BlueprintCallable)
+	void MeetBoss(AActor * Boss);
+	UFUNCTION(BlueprintCallable)
+	void BossLeave();
+	UPROPERTY(EditDefaultsOnly)
+	TArray<FSpringArmValue> SpringArmDefaultValue;
 #pragma endregion CameraSystem
 	
 	// Called to bind functionality to input
@@ -87,6 +101,7 @@ public:
 	void MoveAround(const FInputActionValue& InputAction);
 	void LookAround(const FInputActionValue& InputAction);
 	void LockSystem(const FInputActionValue& InputAction);
+	void ResetController(const FInputActionValue& InputAction);
 	//@TODO:MakeInputDetect
 	void BindSkill(const FInputActionInstance& ActionInstance,FGameplayTag Inputag);
 #pragma endregion InputBindFunction
@@ -94,8 +109,6 @@ public:
 	//Property
 	UPROPERTY(EditDefaultsOnly,BlueprintReadWrite,Category="Abilitysystem")
 	TObjectPtr<UAct_AbilitySystemComponent> ActAbilitySystemComponent;
-	
-
 	UPROPERTY(BlueprintReadWrite,Category="InputDatat")
 	TObjectPtr<UInputDataAsset> InputDataAsset;
 

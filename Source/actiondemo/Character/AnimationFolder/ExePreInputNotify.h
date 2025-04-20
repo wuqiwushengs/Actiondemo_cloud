@@ -15,6 +15,7 @@ class ACTIONDEMO_API UExePreInputNotify : public UAnimNotifyState
 {
 	GENERATED_BODY()
 public:
+	virtual FLinearColor GetEditorColor() override;
 	virtual  void BranchingPointNotifyBegin(FBranchingPointNotifyPayload& BranchingPointPayload) override;
 	virtual void BranchingPointNotifyEnd(FBranchingPointNotifyPayload& BranchingPointPayload) override;
 	virtual void NotifyBegin(USkeletalMeshComponent* MeshComp, UAnimSequenceBase* Animation, float TotalDuration, const FAnimNotifyEventReference& EventReference) override;

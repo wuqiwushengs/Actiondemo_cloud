@@ -115,30 +115,14 @@ void UAct_AbilitySystemComponent::ProcessingInputDataComplete(const FInputAction
 
 void UAct_AbilitySystemComponent::ProcessingInputDataTrigger(const FInputActionInstance& ActionInstance,
 	FGameplayTag Inputag, UInputDataAsset* InputDataAsset,float TriggerTime)
-{	
+{	//当单机时设置
 	FGameplayAbilitySpecHandle Handle;
-	if (AbilityChainManager->UnComboHandle.Find(Inputag))
-	{
-		Handle=*AbilityChainManager->UnComboHandle.Find(Inputag);
-		check(Handle.IsValid());
-		if (Handle.IsValid()&&InputDataAsset->GetAbilityInputDatabyTag(Inputag).bCanHold)
-		{
-			bool BInstance=false;
-			if (const UAct_Ability * Ability=Cast<UAct_Ability>(UAbilitySystemBlueprintLibrary::GetGameplayAbilityFromSpecHandle(this,Handle,BInstance)))
-			{
-				IIAct_AbilityInterface::Execute_SetTriggerTime(const_cast<UAct_Ability*>(Ability),TriggerTime);
-				
-				
-			}
-		}
-	}
 	if (AbilityChainManager->CurrentAbilityType.Handle.IsValid())
 	{
 		Handle=AbilityChainManager->CurrentAbilityType.Handle;
 		check(Handle.IsValid());
 		if (Handle.IsValid()&&InputDataAsset->GetAbilityInputDatabyTag(Inputag).bCanHold)
 		{
-			bool BInstance=false;
 			CurrentHoldTime=TriggerTime;
 			
 		}

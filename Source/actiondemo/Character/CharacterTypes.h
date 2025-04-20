@@ -1,5 +1,6 @@
 ﻿#pragma once
 #include "CoreMinimal.h"
+#include "CharacterTypes.generated.h"
 
 UENUM(BlueprintType)
 enum class ECharacterState:uint8
@@ -28,3 +29,14 @@ enum class  EEigthDirectionState:uint8
 	BackwardRight,
 	None,
 };
+USTRUCT(BlueprintType)
+struct FSpringArmValue
+{
+	GENERATED_BODY()
+	UPROPERTY(EditDefaultsOnly)
+	float ArmLength;
+	UPROPERTY(EditDefaultsOnly)
+	FVector slotoffset;
+	
+};
+
