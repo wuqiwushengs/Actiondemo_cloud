@@ -36,5 +36,4 @@ void UPreInputNotify::NotifyEnd(USkeletalMeshComponent* MeshComp, UAnimSequenceB
 	AAct_Character * Character=Cast<AAct_Character>(MeshComp->GetOwner());
 	if (!Character)return;
 	Character->ActAbilitySystemComponent->SetInputstate(InputState::DisableInputState);
-	Character->SetCharacterAttackingState_Implementation(ECharacterState::UnAttacking);
 }

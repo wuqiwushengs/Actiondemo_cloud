@@ -206,7 +206,7 @@ void UAct_AbilitySystemComponent::OnInputFinal(const FAbilityInputInfo& InputInf
 	{
 		//激活防御技能
 		FAct_AbilityTypes DefenseAbility;
-		if (DefenseAbility.InputTag.IsValid()&&AbilityDataManager->AbilityData->GetAbilityTypesNotInComboChainByTag(ActTagContainer::InputDefense,DefenseAbility))
+		if (AbilityDataManager->AbilityData->GetAbilityTypesNotInComboChainByTag(ActTagContainer::InputDefense,DefenseAbility))
 		{
 			this->TryActivateAbilityByClass(DefenseAbility.Ability);
 		}
@@ -215,7 +215,7 @@ void UAct_AbilitySystemComponent::OnInputFinal(const FAbilityInputInfo& InputInf
 	{
 		//激活翻滚技能
 		FAct_AbilityTypes RollingAbility;
-		if (RollingAbility.InputTag.IsValid()&&AbilityDataManager->AbilityData->GetAbilityTypesNotInComboChainByTag(ActTagContainer::InputRolling,RollingAbility))
+		if (AbilityDataManager->AbilityData->GetAbilityTypesNotInComboChainByTag(ActTagContainer::InputRolling,RollingAbility))
 		{
 			this->TryActivateAbilityByClass(RollingAbility.Ability);
 		}
