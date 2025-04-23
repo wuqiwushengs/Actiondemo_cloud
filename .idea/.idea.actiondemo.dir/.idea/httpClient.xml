@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="4">
+  <component name="HttpClientEndpointsTabState">
+    <option name="requestToText" value="&lt;CachedHttpClientTabRequests&gt;&#10;  &lt;entry key=&quot;0508cc123b2c172d898f2c887b9684d4e886c0ff&quot; value=&quot;###&amp;#10;DELETE https://httpbin.org/anything/{{anything}}&quot; /&gt;&#10;  &lt;entry key=&quot;4c772774a34569dea075bf70b2b919c49e01969c&quot; value=&quot;###&amp;#10;PATCH https://httpbin.org/anything/{{anything}}&quot; /&gt;&#10;  &lt;entry key=&quot;8a4522efc96e45aa6f9e9a6b4599358fac2e7d85&quot; value=&quot;###&amp;#10;GET https://httpbin.org/brotli&quot; /&gt;&#10;&lt;/CachedHttpClientTabRequests&gt;" />
+  </component>
+</project>
