@@ -1,0 +1,29 @@
+{
+	"FileVersion": 3,
+	"Version": 105,
+	"VersionName": "2.0.3",
+	"FriendlyName": "EasyPose",
+	"Description": "Match pose AUTOMATICALLY with ONE click",
+	"Category": "Retarget",
+	"CreatedBy": "TLL",
+	"CreatedByURL": "",
+	"DocsURL": "",
+	"MarketplaceURL": "com.epicgames.launcher://ue/marketplace/product/17a5d8b490794ec28b5996af37381d3b",
+	"SupportURL": "",
+	"EngineVersion": "5.5.0",
+	"CanContainContent": true,
+	"Installed": true,
+	"Modules": [
+		{
+			"Name": "EasyPose",
+			"Type": "Editor",
+			"LoadingPhase": "PostDefault"
+		}
+	],
+	"Plugins": [
+		{
+			"Name": "IKRig",
+			"Enabled": true
+		}
+	]
+}
