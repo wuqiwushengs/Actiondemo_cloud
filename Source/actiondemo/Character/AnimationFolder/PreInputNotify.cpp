@@ -28,12 +28,12 @@ void UPreInputNotify::NotifyBegin(USkeletalMeshComponent* MeshComp, UAnimSequenc
 	AAct_Character * Character=Cast<AAct_Character>(MeshComp->GetOwner());
 	if (!Character)return;
 	Character->ActAbilitySystemComponent->SetInputstate(InputState::PreInputState);
+	Character->ActAbilitySystemComponent->SetInputDisable(DisablePreTag);
 }
 
 void UPreInputNotify::NotifyEnd(USkeletalMeshComponent* MeshComp, UAnimSequenceBase* Animation, const FAnimNotifyEventReference& EventReference)
 {
 	Super::NotifyEnd(MeshComp, Animation,EventReference);
 	AAct_Character * Character=Cast<AAct_Character>(MeshComp->GetOwner());
-	if (!Character)return;
-	Character->ActAbilitySystemComponent->SetInputstate(InputState::DisableInputState);
+	Character->ActAbilitySystemComponent->TurnPreInputToDefault();
 }

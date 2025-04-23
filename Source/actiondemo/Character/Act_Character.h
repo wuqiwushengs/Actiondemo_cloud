@@ -62,6 +62,8 @@ public:
 	bool bForward=false;
 	FVector2D InputValue;
 	bool LockOnce=false;
+	//当玩家操控时不处理碰撞
+	bool PlayerControlLookaxis=false;
 	UFUNCTION()
 	void CheckMovemntInfo();
 	UPROPERTY(EditDefaultsOnly)
@@ -118,5 +120,9 @@ public:
 	ECharacterState CharacterState=ECharacterState::UnAttacking;
 	UPROPERTY(EditDefaultsOnly,BlueprintReadWrite,Category="Playerstate")
 	ECharacterUnAttackingState CharacterUnAttackingState=ECharacterUnAttackingState::Normal;
+	//AttributeSet
+	UPROPERTY()
+	const UAct_AttributeSet * CombatAttribute;
 #pragma endregion PlayerState
+
 };

@@ -105,6 +105,7 @@ bool UAct_AbilityChainChildNode::CheckCorrectAbilityTypes(const UAct_AbilitySyst
 		}
 			
 	};
+	UE_LOG(LogTemp,Warning,TEXT("do once"))
 	return false;
 }
 //当进入这个技能组件的时候尝试执行技能。
@@ -122,26 +123,29 @@ bool UAct_AbilityChainChildNode::OnGameplayChainIn(UAct_AbilitySystemComponent *
 bool UAct_AbilityChainManager::ToNextNode(UAct_AbilityChainChildNode *& CurrentNode,EAttackType AttackType,ECharacterUnAttackingState CurrentState)
 {	//如果当前阶段的状态和当前的状态不一样那么久从新赋值
 	
-	if (LastAbilityState!= CurrentState||!SelectedNode)
+	if (LastAbilityState!= CurrentState||!SelectedNode&&AbilityChainsRoot[CurrentState])
 	{	
 		 CurrentNode= (AttackType == EAttackType::RelaxAttack) 
-			? this->AbilityChainsRoot[CurrentState]->PrimaryRelaxAbilityHead.Get() 
-			: this->AbilityChainsRoot[CurrentState]->PrimaryHeavyAbilityHead.Get();
+			? this->AbilityChainsRoot[CurrentState]->PrimaryRelaxAbilityHead 
+			: this->AbilityChainsRoot[CurrentState]->PrimaryHeavyAbilityHead;
 		if (!CurrentNode)return false;
 		CurrentNode->OnGameplayChainIn(AbilitySystemComponent,this);
 		LastAbilityState=CurrentState;
 		SelectedNode=CurrentNode;
 		return true;
 	}
-	//如果一样那么向检查，如过检查不到那么
-	CurrentNode= (AttackType == EAttackType::RelaxAttack) 
-		? CurrentNode->NextRelaxAttack 
-		: CurrentNode->NextHeavyAttack;
-
+	if (CurrentNode)
+	{
+		//如果一样那么向检查，如过检查不到那么
+		CurrentNode= (AttackType == EAttackType::RelaxAttack) 
+			? CurrentNode->NextRelaxAttack 
+			: CurrentNode->NextHeavyAttack;
+	}
+	//如果没有下一个阶段则直接不执行任何内容了
 	if (!CurrentNode)
 	{
 		TurnToRoot();
-		return ToNextNode(CurrentNode,AttackType,CurrentState);
+		return false;
 	}
 	CurrentNode->OnGameplayChainIn(AbilitySystemComponent,this);
 	LastAbilityState=CurrentState;
@@ -164,6 +168,8 @@ void UAct_AbilityChainManager::BeginConstruct(const UAct_AbilityDatasManager* da
 	this->AbilitySystemComponent=Act_AbilitySystemComponent;
 	TArray<ECharacterUnAttackingState> CharacterUnAttackingStates;
 	datas->AbilitySum.AbilityTypesRelaxHead.GetKeys(CharacterUnAttackingStates);
+	SelectedNode=nullptr;
+	CurrentAbilityType=FAct_AbilityTypes();
 	if(CharacterUnAttackingStates.Num()<=0) return;
 	for (ECharacterUnAttackingState State:CharacterUnAttackingStates)
 	{

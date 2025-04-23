@@ -16,7 +16,7 @@ void UAct_Ability::PreActivate(const FGameplayAbilitySpecHandle Handle, const FG
 {
 	Super::PreActivate(Handle, ActorInfo, ActivationInfo, OnGameplayAbilityEndedDelegate, TriggerEventData);
 	//技能前摇以及单个技能任务的创建
-	
+#pragma  region initAbility
 	PreMontageTask=UAbilityTask_PlayMontageAndWait::CreatePlayMontageAndWaitProxy(this,NAME_None,PreMontage,1.f,NAME_None,1.f);
 	PreMontageTask->OnInterrupted.AddDynamic(this,&UAct_Ability::HandleMontageInterrupted);
 	PreMontageTask->OnBlendOut.AddDynamic(this,&UAct_Ability::PreHandleMontageBlendout);
@@ -56,12 +56,6 @@ void UAct_Ability::PreActivate(const FGameplayAbilitySpecHandle Handle, const FG
 		ContinueMontageTask->OnInterrupted.AddDynamic(this,&UAct_Ability::HandleMontageInterrupted);
 		check(ContinueMontage);
 	}
-	
-}
-void UAct_Ability::ActivateAbility(const FGameplayAbilitySpecHandle Handle, const FGameplayAbilityActorInfo* ActorInfo,const FGameplayAbilityActivationInfo ActivationInfo, const FGameplayEventData* TriggerEventData)
-{
-	Super::ActivateAbility(Handle, ActorInfo, ActivationInfo, TriggerEventData);
-	if (!CommitAbility(Handle,ActorInfo,ActivationInfo)) EndAbility(Handle,ActorInfo,ActivationInfo,true,false);
 	if(bIsContinueMontage)
 	{    
 		ContinueTagTask=UAbilityTask_WaitGameplayEvent::WaitGameplayEvent(this,ActTagContainer::ExeMulityInputRelaxAttack);
@@ -74,9 +68,20 @@ void UAct_Ability::ActivateAbility(const FGameplayAbilitySpecHandle Handle, cons
 		EventOnRealsed->EventReceived.AddDynamic(this,&UAct_Ability::OnHoldEnded);
 		EventOnRealsed->Activate();
 	}
+#pragma  endregion initAbility
+}
+void UAct_Ability::ActivateAbility(const FGameplayAbilitySpecHandle Handle, const FGameplayAbilityActorInfo* ActorInfo,const FGameplayAbilityActivationInfo ActivationInfo, const FGameplayEventData* TriggerEventData)
+{
+	Super::ActivateAbility(Handle, ActorInfo, ActivationInfo, TriggerEventData);
+	if (!CommitAbility(Handle,ActorInfo,ActivationInfo)) EndAbility(Handle,ActorInfo,ActivationInfo,true,false);\
 	//技能前摇
-	PreMontageTask->Activate();
-	OnPreAnimPresssed();
+	if (bUseSkillContext())
+	{
+		PreMontageTask->Activate();
+		OnPreAnimPresssed();
+		
+	}
+	
 }
 void UAct_Ability::EndAbility(const FGameplayAbilitySpecHandle Handle, const FGameplayAbilityActorInfo* ActorInfo,const FGameplayAbilityActivationInfo ActivationInfo, bool bReplicateEndAbility, bool bWasCancelled)
 {
@@ -85,6 +90,11 @@ void UAct_Ability::EndAbility(const FGameplayAbilitySpecHandle Handle, const FGa
 void UAct_Ability::OnEndAbility()
 {	//绑定结束事件
 	EndAbility(GetCurrentAbilitySpecHandle(),GetCurrentActorInfo(),GetCurrentActivationInfo(),true,false);
+}
+
+bool UAct_Ability::bUseSkillContext_Implementation()
+{
+	return true;
 }
 
 void UAct_Ability::HandleMontageInterrupted()
@@ -150,11 +160,12 @@ void UAct_Ability::PreHandleMontageBlendout()
 		return;
 	}
 	//当不是蓄力动画或者蓄力动画没有到时间但是是连打动画是允许的话就播放连打动画
-	if (bIsContinueMontage)
-	{
+	if (bIsContinueMontage&&bIsPressed)
+	{	
 		ContinueMontageTask->Activate();
 		OnContinuePressed();
 		BExexute=true;
+		bIsPressed=false;
 		return;
 	}
 	if (NormalPostMontage)

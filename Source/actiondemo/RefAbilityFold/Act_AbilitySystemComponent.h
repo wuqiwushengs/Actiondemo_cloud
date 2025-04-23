@@ -10,6 +10,7 @@
 //用来标明该轻攻击和重攻击所用的字符，后续技能表中只允许添加这两个字符
 #define RelaxAttackName "X"
 #define HeavyAttackName "Y"
+class UAct_AttributeSet;
 struct FInputActionInstance;
 //用来存储tag和世界时间
 USTRUCT(BlueprintType)
@@ -92,6 +93,12 @@ public:
 	//通过设置此数据来对输入进行开锁或闭锁
 	UPROPERTY(BlueprintReadOnly)
 	InputState CurrentInputType;
+	UPROPERTY()
+	TMap<FGameplayTag,int> AllowedPreInput={{ActTagContainer::InputRelaxAttack,1},{ActTagContainer::InputHeavyAttack,1}
+	,{ActTagContainer::InputDefense,1},{ActTagContainer::InputRolling,1}};
+	void SetInputDisable(const FGameplayTagContainer  & DisableTag );
+	void TurnPreInputToDefault();
+	bool CheckIsAllowed(FGameplayTag PreInpuTag);
 	UFUNCTION()
 	void SetInputstate(InputState InputType);
 	UPROPERTY()
@@ -113,4 +120,5 @@ public:
 	//技能树文件
 	UPROPERTY(EditDefaultsOnly,BlueprintReadWrite)
 	TObjectPtr<UAct_AbilityChainManager> AbilityChainManager;
+	
 };

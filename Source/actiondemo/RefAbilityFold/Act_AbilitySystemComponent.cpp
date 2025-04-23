@@ -5,7 +5,9 @@
 #include "actiondemo/InputDataAsset.h"
 #include "AbilitySystemBlueprintLibrary.h"
 #include "Abilities/Tasks/AbilityTask_WaitGameplayTagBase.h"
+#include "actiondemo/Character/Act_Character.h"
 #include "actiondemo/Character/CharacterInferface.h"
+#include "AttributeContent/Act_AttributeSet.h"
 
 
 UAct_AbilitySystemComponent::UAct_AbilitySystemComponent()
@@ -15,6 +17,7 @@ UAct_AbilitySystemComponent::UAct_AbilitySystemComponent()
 	//初始化
 	AbilityDataManager=CreateDefaultSubobject<UAct_AbilityDatasManager>("AbilityData");
 	AbilityChainManager=CreateDefaultSubobject<UAct_AbilityChainManager>("AbilityChainManager");
+	
 }
 void UAct_AbilitySystemComponent::BeginPlay()
 {
@@ -42,6 +45,7 @@ void UAct_AbilitySystemComponent::ProcessingInputDataStarted(const FInputActionI
 	{
 	case  InputState::PreInputState:
 		{
+			if (!CheckIsAllowed(Inputag)) break;
 			FAbilityInputInfo Abilityinfo(Inputag,WordTime,InputTagsInbuff.Num()<=0?0:WordTime-InputTagsInbuff[0].InputWordTime,InputData.InputType);
 			InputTagsInbuff.Add(Abilityinfo);
 			if (this->GetOwnedGameplayTags().HasTag(ActTagContainer::ExePreInputRelaxAttack))
@@ -125,6 +129,17 @@ void UAct_AbilitySystemComponent::ProcessingInputDataTrigger(const FInputActionI
 		{
 			CurrentHoldTime=TriggerTime;
 			
+		}
+	}
+	
+	if (AAct_Character* Character=Cast<AAct_Character>(GetOwner()))
+	{
+		if (Character->CharacterState==ECharacterState::UnAttacking&&Inputag==ActTagContainer::InputHeavyAttack)
+		{	
+			//如果当前的状态是非攻击状态检测当前攻击如果是重攻击则尝试播放。
+			UAct_AbilityChainChildNode * Temp=AbilityChainManager->SelectedNode.Get();
+			AbilityChainManager->ToNextNode(Temp,EAttackType::HeavyAttack,ICharacterInferface::Execute_GetCharacterUnAttackingState(GetOwner()));
+			UE_LOG(LogTemp,Warning,TEXT("play"));
 		}
 	}
 }
@@ -222,9 +237,41 @@ void UAct_AbilitySystemComponent::OnInputFinal(const FAbilityInputInfo& InputInf
 	}
 }
 
+void UAct_AbilitySystemComponent::SetInputDisable(const FGameplayTagContainer& DisableTag)
+{	TArray<FGameplayTag> DisAbleTags=DisableTag.GetGameplayTagArray();
+	for (FGameplayTag  Tag:DisAbleTags)
+	{
+		if (AllowedPreInput.Find(Tag))
+		{
+			AllowedPreInput[Tag]=0;
+		}
+	}
+}
+
+void UAct_AbilitySystemComponent::TurnPreInputToDefault()
+{
+	for (TPair<FGameplayTag,int>&Tag:AllowedPreInput)
+	{
+		Tag.Value=1;
+	}
+}
+
+bool UAct_AbilitySystemComponent::CheckIsAllowed(FGameplayTag PreInpuTag)
+{
+	if (AllowedPreInput.Find(PreInpuTag))
+	{
+		return  AllowedPreInput[PreInpuTag]==1;
+	}
+	return false;
+}
+
 void UAct_AbilitySystemComponent::SetInputstate(InputState InputType)
 {
 	this->CurrentInputType=InputType;
+	if (InputType==InputState::NormalInputState)
+	{
+		AbilityChainManager->SelectedNode=nullptr;
+	}
 }
 
 void UAct_AbilitySystemComponent::OnPreSkillExecute(const FGameplayTag ExeTag, int32 count)

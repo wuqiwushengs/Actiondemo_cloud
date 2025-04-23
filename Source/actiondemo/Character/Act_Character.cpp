@@ -8,6 +8,7 @@
 #include "Components/ArrowComponent.h"
 #include "GameFramework/CharacterMovementComponent.h"
 #include "Kismet/KismetMathLibrary.h"
+#include "actiondemo/RefAbilityFold/AttributeContent/Act_AttributeSet.h"
 #include "Kismet/KismetSystemLibrary.h"
 
 
@@ -23,6 +24,7 @@ AAct_Character::AAct_Character()
 	SpringArmComponent->SetupAttachment(RootComponent);
 	bUseControllerRotationYaw=false;
 	GetCharacterMovement()->bUseControllerDesiredRotation=true;
+	CombatAttribute=CreateDefaultSubobject<UAct_AttributeSet>("Attribute");
 }
 
 // Called when the game starts or when spawned
@@ -72,6 +74,11 @@ UInputDataAsset* AAct_Character::GetCharacterInputData_Implementation()
 void AAct_Character::SetCharacterAttackingState_Implementation(ECharacterState State)
 {
 	CharacterState=State;
+	//当切换为不攻击时则更改为普通状态
+	if (State==ECharacterState::UnAttacking)
+	{
+		GetAct_AbilitySystemComponent()->SetInputstate(InputState::NormalInputState);
+	}
 }
 
 void AAct_Character::SetCharacterUnAttackingState_Implementation(ECharacterUnAttackingState State)
@@ -170,6 +177,7 @@ bool AAct_Character::TurnToController()
 
 void AAct_Character::checkCameraCollision()
 {
+	if (PlayerControlLookaxis)return;
 	TArray<AActor*> IgnoreActor;
 	TArray<FHitResult> HitResults;
 	UKismetSystemLibrary::SphereTraceMulti(this,CameraComponent->GetComponentLocation(),
@@ -263,6 +271,7 @@ void AAct_Character::MoveAround(const FInputActionValue& InputAction)
 void AAct_Character::LookAround(const FInputActionValue& InputAction)
 {
 	if (!CanMovAroundFree)return;
+	PlayerControlLookaxis=true;
 	FVector2D InputValues=InputAction.Get<FVector2D>();
 	//限制相机的角度，并且让每次转动只允许一个角度，同时当y轴没有角度旋转时或者结束旋转时都归零。
 	if (FMath::Abs(InputValues.X)>FMath::Abs(InputValues.Y))
@@ -321,6 +330,7 @@ void AAct_Character::BindSkill(const FInputActionInstance& ActionInstance, FGame
 void AAct_Character::OnlookAroundEnd(const FInputActionValue& InputAction)
 {
 	PitchSum=0;
+	PlayerControlLookaxis=false;
 	GetLocalViewingPlayerController()->SetControlRotation(FRotator(0,GetControlRotation().Yaw,0));
 }
 #pragma endregion CameraSystem
