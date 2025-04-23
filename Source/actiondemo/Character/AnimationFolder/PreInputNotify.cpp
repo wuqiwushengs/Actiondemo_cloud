@@ -18,8 +18,6 @@ void UPreInputNotify::BranchingPointNotifyBegin(FBranchingPointNotifyPayload& Br
 void UPreInputNotify::BranchingPointNotifyEnd(FBranchingPointNotifyPayload& BranchingPointPayload)
 {
 	Super::BranchingPointNotifyEnd(BranchingPointPayload);
-
-	
 }
 
 void UPreInputNotify::NotifyBegin(USkeletalMeshComponent* MeshComp, UAnimSequenceBase* Animation, float TotalDuration, const FAnimNotifyEventReference& EventReference)
@@ -35,5 +33,6 @@ void UPreInputNotify::NotifyEnd(USkeletalMeshComponent* MeshComp, UAnimSequenceB
 {
 	Super::NotifyEnd(MeshComp, Animation,EventReference);
 	AAct_Character * Character=Cast<AAct_Character>(MeshComp->GetOwner());
+	if (!Character)return;
 	Character->ActAbilitySystemComponent->TurnPreInputToDefault();
 }

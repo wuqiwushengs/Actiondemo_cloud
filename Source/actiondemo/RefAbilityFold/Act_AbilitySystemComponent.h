@@ -82,8 +82,6 @@ public:
 	UFUNCTION(BlueprintCallable)
 	void OnInputFinal(const FAbilityInputInfo& InputInfo);
 #pragma region AbilityInputProcess
-	UPROPERTY()
-	float CurrentHoldTime=0.0f;
 	//缓冲区记录输入的tag
 	UPROPERTY(BlueprintReadOnly)
 	TArray<FAbilityInputInfo> InputTagsInbuff;

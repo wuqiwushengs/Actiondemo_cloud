@@ -38,6 +38,13 @@ public:
 	float AbilityMinHoldTime=0.5f;
 	UPROPERTY()
 	bool BExexute;
+	//按压时长
+	UPROPERTY()
+	float holdtime;
+	UPROPERTY()
+	UAbilityTask_WaitGameplayEvent * EventPressed;
+	UFUNCTION()
+	void OnPressed(FGameplayEventData Data);
 #pragma endregion
 #pragma region Animation
 #pragma  region Pre

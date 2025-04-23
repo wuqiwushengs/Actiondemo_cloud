@@ -44,12 +44,13 @@ void UAct_AbilitySystemComponent::ProcessingInputDataStarted(const FInputActionI
 	switch (CurrentInputType)
 	{
 	case  InputState::PreInputState:
-		{
+		{	
 			if (!CheckIsAllowed(Inputag)) break;
 			FAbilityInputInfo Abilityinfo(Inputag,WordTime,InputTagsInbuff.Num()<=0?0:WordTime-InputTagsInbuff[0].InputWordTime,InputData.InputType);
 			InputTagsInbuff.Add(Abilityinfo);
 			if (this->GetOwnedGameplayTags().HasTag(ActTagContainer::ExePreInputRelaxAttack))
 			{
+				
 				//如果当前的输入tag是预输入阶段的tag那么就直接返回
 				FAbilityInputInfo FinalInputInfo;
 				if (ExeAbilityInputInfo(InputTagsInbuff,FinalInputInfo))
@@ -62,14 +63,15 @@ void UAct_AbilitySystemComponent::ProcessingInputDataStarted(const FInputActionI
 			break;
 		}
 	case InputState::NormalInputState:
-		{
+		{	
 			FAbilityInputInfo Abilityinfo(Inputag,WordTime,InputTagsInbuff.Num()<=0?0:WordTime-InputTagsInbuff[0].InputWordTime,InputDataAsset->GetAbilityInputDatabyTag(Inputag).InputType);
 			if (ChekcInputLengthToSetInputLock(Abilityinfo.InputIntervalTime,ActionInstance,InputDataAsset,Inputag))
 			{
 				InputTagsInbuff.Add(Abilityinfo);
+				Start=true;
 			}
 			if (InputTagsInbuff.Num()>=1&&!GetWorld()->GetTimerManager().IsTimerActive(FinalInputHandle))
-			{
+			{	
 				//假如已经绑定了那就不再进行绑定
 				int32 index=this->InputTagsInbuff.Num()-1;
 				FTimerDelegate FinalExecute;
@@ -113,8 +115,8 @@ void UAct_AbilitySystemComponent::ProcessingInputDataComplete(const FInputAction
 	if (AbilityChainManager->CurrentAbilityType.InputTag==Inputag&&ActionInstance.GetElapsedTime()>0.5)
 	{
 		UAbilitySystemBlueprintLibrary::SendGameplayEventToActor(GetOwner(),ActTagContainer::ExeHoldAbilityInputRelaxAttackReleased,FGameplayEventData());
-		CurrentHoldTime=0.0f;
 	}
+	
 }
 
 void UAct_AbilitySystemComponent::ProcessingInputDataTrigger(const FInputActionInstance& ActionInstance,
@@ -127,19 +129,19 @@ void UAct_AbilitySystemComponent::ProcessingInputDataTrigger(const FInputActionI
 		check(Handle.IsValid());
 		if (Handle.IsValid()&&InputDataAsset->GetAbilityInputDatabyTag(Inputag).bCanHold)
 		{
-			CurrentHoldTime=TriggerTime;
+			UAbilitySystemBlueprintLibrary::SendGameplayEventToActor(GetOwner(),ActTagContainer::Pressed,FGameplayEventData());
 			
 		}
 	}
 	
 	if (AAct_Character* Character=Cast<AAct_Character>(GetOwner()))
-	{
+	{	
 		if (Character->CharacterState==ECharacterState::UnAttacking&&Inputag==ActTagContainer::InputHeavyAttack)
 		{	
 			//如果当前的状态是非攻击状态检测当前攻击如果是重攻击则尝试播放。
 			UAct_AbilityChainChildNode * Temp=AbilityChainManager->SelectedNode.Get();
 			AbilityChainManager->ToNextNode(Temp,EAttackType::HeavyAttack,ICharacterInferface::Execute_GetCharacterUnAttackingState(GetOwner()));
-			UE_LOG(LogTemp,Warning,TEXT("play"));
+	
 		}
 	}
 }

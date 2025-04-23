@@ -21,6 +21,6 @@ public:
 	virtual void NotifyBegin(USkeletalMeshComponent* MeshComp, UAnimSequenceBase* Animation, float TotalDuration, const FAnimNotifyEventReference& EventReference) override;
 	virtual void NotifyEnd(USkeletalMeshComponent* MeshComp, UAnimSequenceBase* Animation, const FAnimNotifyEventReference& EventReference) override;
 	//用来检测当前输入时什么预输入是不允许的。
-	UPROPERTY(EditDefaultsOnly)
+	UPROPERTY(EditAnywhere,meta=(ExposeOnSpawn),BlueprintReadOnly)
 	FGameplayTagContainer DisablePreTag;
 };

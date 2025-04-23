@@ -12,7 +12,6 @@ void UCameraRotateNotify::Notify(USkeletalMeshComponent* MeshComp, UAnimSequence
 	if(!Character) return;
 	float alphavalue=Character->Enemy?0.05:0.2;
 	FRotator Rotator=UKismetMathLibrary::RLerp(Character->GetControlRotation(),Character->GetActorRotation(),alphavalue,true);
-	UE_LOG(LogTemp,Warning,TEXT("Rotate"));
 	Character->GetController()->SetControlRotation(Rotator);
 }
 

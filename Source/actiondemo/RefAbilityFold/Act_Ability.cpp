@@ -17,6 +17,11 @@ void UAct_Ability::PreActivate(const FGameplayAbilitySpecHandle Handle, const FG
 	Super::PreActivate(Handle, ActorInfo, ActivationInfo, OnGameplayAbilityEndedDelegate, TriggerEventData);
 	//技能前摇以及单个技能任务的创建
 #pragma  region initAbility
+	UAct_AbilitySystemComponent * Component=Cast<UAct_AbilitySystemComponent>(GetAbilitySystemComponentFromActorInfo());
+	if (Component)
+	{
+	
+	}
 	PreMontageTask=UAbilityTask_PlayMontageAndWait::CreatePlayMontageAndWaitProxy(this,NAME_None,PreMontage,1.f,NAME_None,1.f);
 	PreMontageTask->OnInterrupted.AddDynamic(this,&UAct_Ability::HandleMontageInterrupted);
 	PreMontageTask->OnBlendOut.AddDynamic(this,&UAct_Ability::PreHandleMontageBlendout);
@@ -63,7 +68,10 @@ void UAct_Ability::PreActivate(const FGameplayAbilitySpecHandle Handle, const FG
 		ContinueTagTask->Activate();
 	}
 	if (bHoldMontage)
-	{
+	{	
+		EventPressed=UAbilityTask_WaitGameplayEvent::WaitGameplayEvent(this,ActTagContainer::Pressed);
+		EventPressed->EventReceived.AddDynamic(this,&UAct_Ability::UAct_Ability::OnPressed);
+		EventPressed->Activate();
 		EventOnRealsed=UAbilityTask_WaitGameplayEvent::WaitGameplayEvent(this,ActTagContainer::ExeHoldAbilityInputRelaxAttackReleased);
 		EventOnRealsed->EventReceived.AddDynamic(this,&UAct_Ability::OnHoldEnded);
 		EventOnRealsed->Activate();
@@ -79,7 +87,7 @@ void UAct_Ability::ActivateAbility(const FGameplayAbilitySpecHandle Handle, cons
 	{
 		PreMontageTask->Activate();
 		OnPreAnimPresssed();
-		
+		UE_LOG(LogTemp,Warning,TEXT("Ability"))
 	}
 	
 }
@@ -147,15 +155,24 @@ void UAct_Ability::OnContinuePressed()
 }
 #pragma endregion Continue
 #pragma region Pre
+void UAct_Ability::OnPressed(FGameplayEventData Data)
+{
+	if (!BExexute)
+	{
+		holdtime+=GetWorld()->GetDeltaSeconds();
+	}
+	
+}
+
 //处理动画前摇的动画混出
 void UAct_Ability::PreHandleMontageBlendout()
-{	//通过减0.05的方式避免到这个时候判断时间差一丢丢不够，提前一两帧
-	UE_LOG(LogTemp,Warning,TEXT("%f"),AbilityTriggerTime);
+{	
 	UAct_AbilitySystemComponent*AbiliySystemComponent= Cast<UAct_AbilitySystemComponent>(GetAbilitySystemComponentFromActorInfo());
 	
-	if (bHoldMontage&&HoldMontage&&AbiliySystemComponent->CurrentHoldTime>(PreMontage->GetPlayLength()-0.3))
+	if (!BExexute&&bHoldMontage&&HoldMontage&&holdtime>(PreMontage->GetPlayLength()-0.3))
 	{	//当判断有蓄力动画并且时间大于前摇动画的时间时，播放蓄力动画
 		HoldMontageTask->Activate();
+		BExexute=false;
 		OnHoldPressed();
 		return;
 	}
@@ -178,6 +195,7 @@ void UAct_Ability::PreHandleMontageBlendout()
 		PostMontageTask->Activate();
 		OnPostPressed();
 	}
+	
 }
 void UAct_Ability::OnPreAnimPresssed()
 {
@@ -185,8 +203,8 @@ void UAct_Ability::OnPreAnimPresssed()
 #pragma endregion pre
 #pragma region Hold
 int32 UAct_Ability::CaculateAbilityHoldLevel(float HoldLevelTime) const
-{	UAct_AbilitySystemComponent*AbiliySystemComponent= Cast<UAct_AbilitySystemComponent>(GetAbilitySystemComponentFromActorInfo());
-	int32 level=FMath::Clamp(int32(AbiliySystemComponent->CurrentHoldTime/HoldUpLevelTime),0,HoldPostMontage.Num()-1);
+{
+	int32 level=FMath::Clamp(int32(holdtime/HoldUpLevelTime),0,HoldPostMontage.Num()-1);
 	return level;
 }
 
@@ -197,17 +215,17 @@ void UAct_Ability::OnPostPressed()
 void UAct_Ability::OnHoldEnded(FGameplayEventData EventData)
 {
 	if (!BExexute)
-	{
+	{ 
 		UAnimMontage* Montage=nullptr;
 		BExexute=true;
 		if (!HoldPostMontage.IsEmpty())
 		{
 			Montage=HoldPostMontage[CaculateAbilityHoldLevel(HoldUpLevelTime)];
 		}
-		
+		holdtime=0;
 		//当松开时，播放post内容结束后摇随后结束技能
 		UAct_AbilitySystemComponent*AbiliySystemComponent= Cast<UAct_AbilitySystemComponent>(GetAbilitySystemComponentFromActorInfo());
-		if (Montage&&AbiliySystemComponent->CurrentHoldTime>(PreMontage->GetPlayLength()))
+		if (Montage)
 		{
 			PostMontageTask=UAbilityTask_PlayMontageAndWait::CreatePlayMontageAndWaitProxy(this,NAME_None,Montage,1.f);
 			PostMontageTask->OnBlendOut.AddDynamic(this,&UAct_Ability::OnEndAbility);
@@ -218,7 +236,7 @@ void UAct_Ability::OnHoldEnded(FGameplayEventData EventData)
 			OnPostPressed();
 		}
 		
-		AbiliySystemComponent->CurrentHoldTime=0.0f;
+		
 		
 	}
 	
