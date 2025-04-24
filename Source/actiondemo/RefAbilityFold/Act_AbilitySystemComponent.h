@@ -31,7 +31,6 @@ struct FAbilityInputInfo
 	UPROPERTY()
 	EInputWeightType InputWeightType;
 };
-
 UENUM(BlueprintType)
 enum class InputState:uint8
 {
@@ -96,7 +95,7 @@ public:
 	,{ActTagContainer::InputDefense,1},{ActTagContainer::InputRolling,1}};
 	void SetInputDisable(const FGameplayTagContainer  & DisableTag );
 	void TurnPreInputToDefault();
-	bool CheckIsAllowed(FGameplayTag PreInpuTag);
+	bool CheckIsAllowed(FGameplayTag PreInputTag);
 	UFUNCTION()
 	void SetInputstate(InputState InputType);
 	UPROPERTY()
@@ -108,6 +107,7 @@ public:
 	FTimerUnlockDelegate InputUnlockDelegate;
 	UFUNCTION()
 	void OnPreSkillExecute(const FGameplayTag ExeTag, int32 count);
+	FGameplayTag TriggerTag;
 #pragma endregion AbiltyInputProcess
 	//输入缓冲结束后执行
 	UPROPERTY()

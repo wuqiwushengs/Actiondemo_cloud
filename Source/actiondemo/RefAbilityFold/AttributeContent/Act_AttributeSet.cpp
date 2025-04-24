@@ -3,7 +3,7 @@
 
 #include "Act_AttributeSet.h"
 
-UAct_AttributeSet::UAct_AttributeSet():MaxHealth(100.0f),Health(100.0f),MaxStamina(1.0f),Stamina(1.0f)
+UAct_AttributeSet::UAct_AttributeSet():Health(100.0f),MaxHealth(100.0f),Stamina(1.0f),MaxStamina(1.0f)
 {
 }
 

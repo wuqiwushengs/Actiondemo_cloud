@@ -45,6 +45,7 @@ public:
 	UAbilityTask_WaitGameplayEvent * EventPressed;
 	UFUNCTION()
 	void OnPressed(FGameplayEventData Data);
+	bool ContinueBegin=false;
 #pragma endregion
 #pragma region Animation
 #pragma  region Pre
@@ -70,6 +71,7 @@ public:
 	//按下多久开启下一个等级的蓄力。后面可能会扩展
 	UPROPERTY()
 	float HoldUpLevelTime=1.0f;
+	
 	UPROPERTY(EditDefaultsOnly)
 	bool bHoldMontage;
 	UFUNCTION()

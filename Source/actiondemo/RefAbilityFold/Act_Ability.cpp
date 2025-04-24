@@ -172,7 +172,6 @@ void UAct_Ability::PreHandleMontageBlendout()
 	if (!BExexute&&bHoldMontage&&HoldMontage&&holdtime>(PreMontage->GetPlayLength()-0.3))
 	{	//当判断有蓄力动画并且时间大于前摇动画的时间时，播放蓄力动画
 		HoldMontageTask->Activate();
-		BExexute=false;
 		OnHoldPressed();
 		return;
 	}
@@ -219,12 +218,11 @@ void UAct_Ability::OnHoldEnded(FGameplayEventData EventData)
 		UAnimMontage* Montage=nullptr;
 		BExexute=true;
 		if (!HoldPostMontage.IsEmpty())
-		{
+		{	
 			Montage=HoldPostMontage[CaculateAbilityHoldLevel(HoldUpLevelTime)];
 		}
 		holdtime=0;
 		//当松开时，播放post内容结束后摇随后结束技能
-		UAct_AbilitySystemComponent*AbiliySystemComponent= Cast<UAct_AbilitySystemComponent>(GetAbilitySystemComponentFromActorInfo());
 		if (Montage)
 		{
 			PostMontageTask=UAbilityTask_PlayMontageAndWait::CreatePlayMontageAndWaitProxy(this,NAME_None,Montage,1.f);
