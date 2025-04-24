@@ -5,7 +5,6 @@
 
 #include "AbilitySystemBlueprintLibrary.h"
 #include "AbilitySystemComponent.h"
-#include "Act_AbilitySystemComponent.h"
 #include "Abilities/Tasks/AbilityTask_PlayMontageAndWait.h"
 #include "Abilities/Tasks/AbilityTask_WaitGameplayEvent.h"
 #include "actiondemo/Act_TagContainer.h"
@@ -17,11 +16,6 @@ void UAct_Ability::PreActivate(const FGameplayAbilitySpecHandle Handle, const FG
 	Super::PreActivate(Handle, ActorInfo, ActivationInfo, OnGameplayAbilityEndedDelegate, TriggerEventData);
 	//技能前摇以及单个技能任务的创建
 #pragma  region initAbility
-	UAct_AbilitySystemComponent * Component=Cast<UAct_AbilitySystemComponent>(GetAbilitySystemComponentFromActorInfo());
-	if (Component)
-	{
-	
-	}
 	PreMontageTask=UAbilityTask_PlayMontageAndWait::CreatePlayMontageAndWaitProxy(this,NAME_None,PreMontage,1.f,NAME_None,1.f);
 	PreMontageTask->OnInterrupted.AddDynamic(this,&UAct_Ability::HandleMontageInterrupted);
 	PreMontageTask->OnBlendOut.AddDynamic(this,&UAct_Ability::PreHandleMontageBlendout);
@@ -167,7 +161,6 @@ void UAct_Ability::OnPressed(FGameplayEventData Data)
 //处理动画前摇的动画混出
 void UAct_Ability::PreHandleMontageBlendout()
 {	
-	UAct_AbilitySystemComponent*AbiliySystemComponent= Cast<UAct_AbilitySystemComponent>(GetAbilitySystemComponentFromActorInfo());
 	
 	if (!BExexute&&bHoldMontage&&HoldMontage&&holdtime>(PreMontage->GetPlayLength()-0.3))
 	{	//当判断有蓄力动画并且时间大于前摇动画的时间时，播放蓄力动画
@@ -203,7 +196,7 @@ void UAct_Ability::OnPreAnimPresssed()
 #pragma region Hold
 int32 UAct_Ability::CaculateAbilityHoldLevel(float HoldLevelTime) const
 {
-	int32 level=FMath::Clamp(int32(holdtime/HoldUpLevelTime),0,HoldPostMontage.Num()-1);
+	int32 level=FMath::Clamp(FMath::FloorToInt32(holdtime/HoldUpLevelTime),0,HoldPostMontage.Num()-1);
 	return level;
 }
 

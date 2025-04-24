@@ -8,7 +8,6 @@
 #include "actiondemo/Character/Act_Character.h"
 #include "actiondemo/Character/CharacterInferface.h"
 #include "AttributeContent/Act_AttributeSet.h"
-#include "Kismet/KismetSystemLibrary.h"
 
 
 UAct_AbilitySystemComponent::UAct_AbilitySystemComponent()
@@ -103,8 +102,6 @@ void UAct_AbilitySystemComponent::ProcessingInputDataStarted(const FInputActionI
 void UAct_AbilitySystemComponent::ProcessingInputDataComplete(const FInputActionInstance& ActionInstance,FGameplayTag Inputag, UInputDataAsset* InputDataAsset)
 {	//检查获取取消键的技能的委托并且释放。保证不会因为一个导致其他的技能被释放
 	FAct_AbilityTypes NotInComboSkill;
-	FGameplayAbilitySpecHandle Handle;
-	FInputData InputData=InputDataAsset->GetAbilityInputDatabyTag(Inputag);
 	if (AbilityChainManager->UnComboHandle.Find(Inputag))
 	{		//处理用sendgameplaytag;
 		UAbilitySystemBlueprintLibrary::SendGameplayEventToActor(GetOwner(),ActTagContainer::ExeUnComboAbilityInputReleased,FGameplayEventData());
