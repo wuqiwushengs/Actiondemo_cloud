@@ -1,4 +1,6 @@
 ﻿#include "Act_AbilityChain.h"
+
+#include "AbilitySystemBlueprintLibrary.h"
 #include "Act_AbilitySystemComponent.h"
 #include "actiondemo/Character/CharacterInferface.h"
 #pragma region Act_AbilityChainRoot
@@ -112,7 +114,7 @@ bool UAct_AbilityChainChildNode::CheckCorrectAbilityTypes(const UAct_AbilitySyst
 bool UAct_AbilityChainChildNode::OnGameplayChainIn(UAct_AbilitySystemComponent * AbilitySystemComponent,UAct_AbilityChainManager * ChainManager)
 {	FAct_AbilityTypes EnableAbilityTypes;
 	if (CheckCorrectAbilityTypes(AbilitySystemComponent,EnableAbilityTypes))
-	{
+	{	
 		bool Success=AbilitySystemComponent->TryActivateAbilityByClass(EnableAbilityTypes.Ability);
 		ChainManager->CurrentAbilityType=EnableAbilityTypes;
 		return Success;

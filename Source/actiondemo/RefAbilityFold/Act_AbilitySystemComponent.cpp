@@ -106,12 +106,14 @@ void UAct_AbilitySystemComponent::ProcessingInputDataComplete(const FInputAction
 	{		//处理用sendgameplaytag;
 		UAbilitySystemBlueprintLibrary::SendGameplayEventToActor(GetOwner(),ActTagContainer::ExeUnComboAbilityInputReleased,FGameplayEventData());
 	}
-	
-	if (AbilityChainManager->CurrentAbilityType.InputTag==Inputag&&ActionInstance.GetElapsedTime()>0.5)
-	{
-		UAbilitySystemBlueprintLibrary::SendGameplayEventToActor(GetOwner(),ActTagContainer::ExeHoldAbilityInputRelaxAttackReleased,FGameplayEventData());
+	//无法解决快速连按的问题，会出现无法进入的情况，只能慢速
+	if (AbilityChainManager->CurrentAbilityType.InputTag==Inputag)
+	{	FGameplayEventData EventData;
+		UE_LOG(LogTemp,Warning,TEXT("TRY Continue"));
+		UAbilitySystemBlueprintLibrary::SendGameplayEventToActor(GetOwner(),ActTagContainer::ExeHoldAbilityInputRelaxAttackReleased,EventData);
 	}
 	TriggerTag=FGameplayTag();
+	
 }
 
 void UAct_AbilitySystemComponent::ProcessingInputDataTrigger(const FInputActionInstance& ActionInstance,
@@ -266,6 +268,7 @@ void UAct_AbilitySystemComponent::SetInputstate(InputState InputType)
 			if (AbilityChainManager->ToNextNode(Node,EAttackType::HeavyAttack,player->GetCharacterUnAttackingState_Implementation()))
 			{
 				SetInputstate(InputState::DisableInputState);
+				InputTagsInbuff.Empty();
 			}
 			
 			

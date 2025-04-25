@@ -94,6 +94,7 @@ public:
 	UAnimMontage* ContinueMontage;
 	UPROPERTY()
 	bool bIsPressed;
+	int PressedIndex;
 	//如果这个布尔为真的话那么一定要有动画，一定要有动画，不然会崩溃的孩子，懒得加检查了。
 	UPROPERTY(EditDefaultsOnly)
 	bool bIsContinueMontage;

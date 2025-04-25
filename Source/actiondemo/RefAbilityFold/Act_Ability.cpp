@@ -8,6 +8,7 @@
 #include "Abilities/Tasks/AbilityTask_PlayMontageAndWait.h"
 #include "Abilities/Tasks/AbilityTask_WaitGameplayEvent.h"
 #include "actiondemo/Act_TagContainer.h"
+#include "actiondemo/Character/Act_Character.h"
 
 class UAbilityAsync_WaitGameplayEvent;
 //TODO::连击的测试。
@@ -19,10 +20,15 @@ void UAct_Ability::PreActivate(const FGameplayAbilitySpecHandle Handle, const FG
 	PreMontageTask=UAbilityTask_PlayMontageAndWait::CreatePlayMontageAndWaitProxy(this,NAME_None,PreMontage,1.f,NAME_None,1.f);
 	PreMontageTask->OnInterrupted.AddDynamic(this,&UAct_Ability::HandleMontageInterrupted);
 	PreMontageTask->OnBlendOut.AddDynamic(this,&UAct_Ability::PreHandleMontageBlendout);
-	if (!NormalPostMontage)
-	{
+	if (!NormalPostMontage&&!bHoldMontage&&!bIsContinueMontage)
+	{	PreMontageTask->OnInterrupted.Clear();
+		PreMontageTask->OnInterrupted.AddDynamic(this,&UAct_Ability::OnEndAbility);
+		PreMontageTask->OnCancelled.AddDynamic(this,&UAct_Ability::OnEndAbility);
 		PreMontageTask->OnCompleted.AddDynamic(this,&UAct_Ability::OnEndAbility);
+		PreMontageTask->OnBlendOut.AddDynamic(this,&UAct_Ability::OnEndAbility);
 	}
+	
+	
 	check(PreMontageTask);
 	//技能蓄力阶段的任务
 	if (bHoldMontage)
@@ -81,7 +87,39 @@ void UAct_Ability::ActivateAbility(const FGameplayAbilitySpecHandle Handle, cons
 	{
 		PreMontageTask->Activate();
 		OnPreAnimPresssed();
-		UE_LOG(LogTemp,Warning,TEXT("Ability"))
+	}
+	
+}
+//处理动画前摇的动画混出
+void UAct_Ability::PreHandleMontageBlendout()
+{	
+	
+	if (!BExexute&&bHoldMontage&&HoldMontage&&holdtime>(PreMontage->GetPlayLength()-0.3))
+	{	//当判断有蓄力动画并且时间大于前摇动画的时间时，播放蓄力动画
+		HoldMontageTask->Activate();
+		OnHoldPressed();
+		return;
+	}
+	//当不是蓄力动画或者蓄力动画没有到时间但是是连打动画是允许的话就播放连打动画
+	if (bIsContinueMontage&&bIsPressed)
+	{	
+		holdtime=0;
+		ContinueMontageTask->Activate();
+		OnContinuePressed();
+		BExexute=true;
+		bIsPressed=false;
+		return;
+	}
+	if (NormalPostMontage)
+	{	//当判断不是蓄力动画和连打动画，则播放后摇动画
+		BExexute=true;
+		PostMontageTask=UAbilityTask_PlayMontageAndWait::CreatePlayMontageAndWaitProxy(this,NAME_None,NormalPostMontage,1.f);
+		PostMontageTask->OnBlendOut.AddDynamic(this,&UAct_Ability::OnEndAbility);
+		PostMontageTask->OnCompleted.AddDynamic(this,&UAct_Ability::OnEndAbility);
+		PostMontageTask->OnCancelled.AddDynamic(this,&UAct_Ability::OnEndAbility);
+		PostMontageTask->OnInterrupted.AddDynamic(this,&UAct_Ability::OnEndAbility);
+		PostMontageTask->Activate();
+		OnPostPressed();
 	}
 	
 }
@@ -111,17 +149,16 @@ void UAct_Ability::HandleMontageInterrupted()
 void UAct_Ability::OnContinueTagReceived(FGameplayEventData EventData)
 {   if (EventData.EventTag==ActTagContainer::ExeMulityInputRelaxAttack&&bIsContinueMontage)
 	{
-		if (!bIsPressed)
-		{
+			PressedIndex=FMath::Clamp(PressedIndex+1,0,2);
 			bIsPressed=true;
-		}
+			
 	}
 }
 void UAct_Ability::TurnToPostMontage()
 {	//当为真时则继续播放攻击动画
-	
-	if (bIsPressed)
-	{	
+	UE_LOG(LogTemp,Warning,TEXT("Continue %d"),PressedIndex);
+	if (PressedIndex>0)
+	{	holdtime=0;
 		ContinueMontageTask=UAbilityTask_PlayMontageAndWait::CreatePlayMontageAndWaitProxy(this,NAME_None,ContinueMontage,1.f,NAME_None,1.f);
 		//当动画混出的时候则播放后摇
 		ContinueMontageTask->OnBlendOut.AddDynamic(this,&UAct_Ability::TurnToPostMontage);
@@ -130,6 +167,8 @@ void UAct_Ability::TurnToPostMontage()
 		ContinueMontageTask->Activate();
 		OnContinuePressed();
 		bIsPressed=false;
+		PressedIndex--;
+		
 		return;
 		
 	}
@@ -155,40 +194,14 @@ void UAct_Ability::OnPressed(FGameplayEventData Data)
 	{
 		holdtime+=GetWorld()->GetDeltaSeconds();
 	}
+	else
+	{
+		holdtime=0;
+	}
 	
 }
 
-//处理动画前摇的动画混出
-void UAct_Ability::PreHandleMontageBlendout()
-{	
-	
-	if (!BExexute&&bHoldMontage&&HoldMontage&&holdtime>(PreMontage->GetPlayLength()-0.3))
-	{	//当判断有蓄力动画并且时间大于前摇动画的时间时，播放蓄力动画
-		HoldMontageTask->Activate();
-		OnHoldPressed();
-		return;
-	}
-	//当不是蓄力动画或者蓄力动画没有到时间但是是连打动画是允许的话就播放连打动画
-	if (bIsContinueMontage&&bIsPressed)
-	{	
-		ContinueMontageTask->Activate();
-		OnContinuePressed();
-		BExexute=true;
-		bIsPressed=false;
-		return;
-	}
-	if (NormalPostMontage)
-	{	//当判断不是蓄力动画和连打动画，则播放后摇动画
-		PostMontageTask=UAbilityTask_PlayMontageAndWait::CreatePlayMontageAndWaitProxy(this,NAME_None,NormalPostMontage,1.f);
-		PostMontageTask->OnBlendOut.AddDynamic(this,&UAct_Ability::OnEndAbility);
-		PostMontageTask->OnCompleted.AddDynamic(this,&UAct_Ability::OnEndAbility);
-		PostMontageTask->OnCancelled.AddDynamic(this,&UAct_Ability::OnEndAbility);
-		PostMontageTask->OnInterrupted.AddDynamic(this,&UAct_Ability::OnEndAbility);
-		PostMontageTask->Activate();
-		OnPostPressed();
-	}
-	
-}
+
 void UAct_Ability::OnPreAnimPresssed()
 {
 }
@@ -205,8 +218,15 @@ void UAct_Ability::OnPostPressed()
 }
 
 void UAct_Ability::OnHoldEnded(FGameplayEventData EventData)
-{
-	if (!BExexute)
+{	bool iscontinue=false ;
+	if (ContinueMontageTask)
+	{
+		if (ContinueMontageTask->IsActive())
+		{
+			iscontinue=true;
+		}
+	}
+	if (!BExexute&&holdtime>0.5&&!iscontinue)
 	{ 
 		UAnimMontage* Montage=nullptr;
 		BExexute=true;
@@ -214,7 +234,6 @@ void UAct_Ability::OnHoldEnded(FGameplayEventData EventData)
 		{	
 			Montage=HoldPostMontage[CaculateAbilityHoldLevel(HoldUpLevelTime)];
 		}
-		holdtime=0;
 		//当松开时，播放post内容结束后摇随后结束技能
 		if (Montage)
 		{
@@ -226,11 +245,19 @@ void UAct_Ability::OnHoldEnded(FGameplayEventData EventData)
 			PostMontageTask->Activate();
 			OnPostPressed();
 		}
-		
-		
-		
+		return;
 	}
-	
+	if (!BExexute&&NormalPostMontage&&holdtime<0.5&&!bIsContinueMontage)
+	{	//当判断不是蓄力动画和连打动画，则播放后摇动画
+		BExexute=true;
+		PostMontageTask=UAbilityTask_PlayMontageAndWait::CreatePlayMontageAndWaitProxy(this,NAME_None,NormalPostMontage,1.f);
+		PostMontageTask->OnBlendOut.AddDynamic(this,&UAct_Ability::OnEndAbility);
+		PostMontageTask->OnCompleted.AddDynamic(this,&UAct_Ability::OnEndAbility);
+		PostMontageTask->OnCancelled.AddDynamic(this,&UAct_Ability::OnEndAbility);
+		PostMontageTask->OnInterrupted.AddDynamic(this,&UAct_Ability::OnEndAbility);
+		PostMontageTask->Activate();
+		OnPostPressed();
+	}
 }
 
 void UAct_Ability::OnHoldPressed()
@@ -239,10 +266,28 @@ void UAct_Ability::OnHoldPressed()
 
 void UAct_Ability::TurnTohold()
 {
-	HoldMontageTask=UAbilityTask_PlayMontageAndWait::CreatePlayMontageAndWaitProxy(this,NAME_None,HoldMontage,1.f,NAME_None,1.f);
-	HoldMontageTask->OnInterrupted.AddDynamic(this,&UAct_Ability::HandleMontageInterrupted);
-	check(HoldMontage)
-	HoldMontageTask->Activate();
+	if (!BExexute)
+	{
+		HoldMontageTask=UAbilityTask_PlayMontageAndWait::CreatePlayMontageAndWaitProxy(this,NAME_None,HoldMontage,1.f,NAME_None,1.f);
+		HoldMontageTask->OnInterrupted.AddDynamic(this,&UAct_Ability::HandleMontageInterrupted);
+		check(HoldMontage)
+		HoldMontageTask->Activate();
+		
+	}
+	else
+	{
+		if (NormalPostMontage)
+		{	//当判断不是蓄力动画和连打动画，则播放后摇动画
+			PostMontageTask=UAbilityTask_PlayMontageAndWait::CreatePlayMontageAndWaitProxy(this,NAME_None,NormalPostMontage,1.f);
+			PostMontageTask->OnBlendOut.AddDynamic(this,&UAct_Ability::OnEndAbility);
+			PostMontageTask->OnCompleted.AddDynamic(this,&UAct_Ability::OnEndAbility);
+			PostMontageTask->OnCancelled.AddDynamic(this,&UAct_Ability::OnEndAbility);
+			PostMontageTask->OnInterrupted.AddDynamic(this,&UAct_Ability::OnEndAbility);
+			PostMontageTask->Activate();
+			OnPostPressed();
+		}
+	}
+	
 	
 }
 #pragma endregion Hold
