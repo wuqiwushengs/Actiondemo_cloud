@@ -83,6 +83,12 @@ void UAct_AbilitySystemComponent::ProcessingInputDataStarted(const FInputActionI
 	case InputState::DisableInputState:
 		{	//用来处理在输入锁定后连续打击类型的技能
 			//需要加一个判断，假如当前的输入tag是预输入阶段的tag那么就执行
+			if (GetActivatableAbilities().IsEmpty())
+			{
+				SetInputstate(InputState::NormalInputState);
+				ProcessingInputDataStarted(ActionInstance, Inputag, InputDataAsset);
+				UE_LOG(LogTemp,Warning,TEXT("Disable to Normal"))
+			}
 			InputTagsInbuff.Empty();
 			if (Inputag==AbilityChainManager->CurrentAbilityType.InputTag)
 			{
