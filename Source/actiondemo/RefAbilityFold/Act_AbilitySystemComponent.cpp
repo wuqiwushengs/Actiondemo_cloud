@@ -44,7 +44,7 @@ void UAct_AbilitySystemComponent::ProcessingInputDataStarted(const FInputActionI
 	switch (CurrentInputType)
 	{
 	case  InputState::PreInputState:
-		{	//TODO::优化操作手感，感觉这里经常会卡手，不容易连击，需要调整。
+		{	//TODO::优化操作手感，感觉这里经常会卡手，不容易连击，需要调整。（暂时应该不用更改）
 			if (!CheckIsAllowed(Inputag)) break;
 			FAbilityInputInfo Abilityinfo(Inputag,WordTime,InputTagsInbuff.Num()<=0?0:WordTime-InputTagsInbuff[0].InputWordTime,InputData.InputType);
 			InputTagsInbuff.Add(Abilityinfo);
