@@ -126,10 +126,14 @@ bool UAct_AbilityChainManager::ToNextNode(UAct_AbilityChainChildNode *& CurrentN
 {	//如果当前阶段的状态和当前的状态不一样那么久从新赋值
 	
 	if (LastAbilityState!= CurrentState||!SelectedNode&&AbilityChainsRoot[CurrentState])
-	{	
-		 CurrentNode= (AttackType == EAttackType::RelaxAttack) 
-			? this->AbilityChainsRoot[CurrentState]->PrimaryRelaxAbilityHead 
-			: this->AbilityChainsRoot[CurrentState]->PrimaryHeavyAbilityHead;
+	{
+		if (this->AbilityChainsRoot[CurrentState]&&this->AbilityChainsRoot[CurrentState])
+		{
+			CurrentNode= (AttackType == EAttackType::RelaxAttack) 
+		   ? this->AbilityChainsRoot[CurrentState]->PrimaryRelaxAbilityHead 
+		   : this->AbilityChainsRoot[CurrentState]->PrimaryHeavyAbilityHead;
+			
+		}
 		if (!CurrentNode)return false;
 		CurrentNode->OnGameplayChainIn(AbilitySystemComponent,this);
 		LastAbilityState=CurrentState;
@@ -180,6 +184,7 @@ void UAct_AbilityChainManager::BeginConstruct(const UAct_AbilityDatasManager* da
 		AbilityChainsRoot.Add(State,Root);
 	}
 	if (!datas->AbilityData->AbilitiesNotInComboChain) return;
+	UnComboHandle.Empty();
 	for(FName Name:datas->AbilityData->AbilitiesNotInComboChain->GetRowNames())
 	{	FString MSG=TEXT("Can't find");
 		FGameplayAbilitySpec Spec(datas->AbilityData->AbilitiesNotInComboChain->FindRow<FAct_AbilityTypes>(Name,MSG)->Ability);

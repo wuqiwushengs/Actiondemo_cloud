@@ -74,7 +74,7 @@ void UAct_AbilitySystemComponent::ProcessingInputDataStarted(const FInputActionI
 				//假如已经绑定了那就不再进行绑定
 				int32 index=this->InputTagsInbuff.Num()-1;
 				FTimerDelegate FinalExecute;
-				FinalExecute.BindLambda([this,ActionInstance,InputDataAsset,index](){CheckFinalInput();SetInputLock(ActionInstance,InputDataAsset,this->InputTagsInbuff[index].InputTag);});
+				FinalExecute.BindLambda([this,ActionInstance,InputDataAsset,index](){SetInputLock(ActionInstance,InputDataAsset,this->InputTagsInbuff[index].InputTag);CheckFinalInput();});
 				GetWorld()->GetTimerManager().SetTimer(FinalInputHandle,FinalExecute,AbilityInputBuffTime,false);
 			}
 			break;
@@ -104,12 +104,12 @@ void UAct_AbilitySystemComponent::ProcessingInputDataComplete(const FInputAction
 	FAct_AbilityTypes NotInComboSkill;
 	if (AbilityChainManager->UnComboHandle.Find(Inputag))
 	{		//处理用sendgameplaytag;
+		UE_LOG(LogTemp,Warning,TEXT("TRY Continue"));
 		UAbilitySystemBlueprintLibrary::SendGameplayEventToActor(GetOwner(),ActTagContainer::ExeUnComboAbilityInputReleased,FGameplayEventData());
 	}
 	//无法解决快速连按的问题，会出现无法进入的情况，只能慢速
 	if (AbilityChainManager->CurrentAbilityType.InputTag==Inputag)
 	{	FGameplayEventData EventData;
-		UE_LOG(LogTemp,Warning,TEXT("TRY Continue"));
 		UAbilitySystemBlueprintLibrary::SendGameplayEventToActor(GetOwner(),ActTagContainer::ExeHoldAbilityInputRelaxAttackReleased,EventData);
 	}
 	TriggerTag=FGameplayTag();
@@ -124,7 +124,7 @@ void UAct_AbilitySystemComponent::ProcessingInputDataTrigger(const FInputActionI
 	{	
 		Handle=AbilityChainManager->CurrentAbilityType.Handle;
 		check(Handle.IsValid());
-		if (Handle.IsValid()&&InputDataAsset->GetAbilityInputDatabyTag(Inputag).bCanHold)
+		if (Handle.IsValid()&&InputDataAsset->GetAbilityInputDatabyTag(Inputag).bCanHold&&Inputag==ActTagContainer::InputHeavyAttack)
 		{
 			UAbilitySystemBlueprintLibrary::SendGameplayEventToActor(GetOwner(),ActTagContainer::Pressed,FGameplayEventData());
 			
@@ -144,7 +144,7 @@ bool UAct_AbilitySystemComponent::ChekcInputLengthToSetInputLock(float InputLeng
 void UAct_AbilitySystemComponent::SetInputLock(const FInputActionInstance & ActionInstance,UInputDataAsset *InputDataAsset,FGameplayTag Inputtag)
 {
 	CurrentInputType=InputState::DisableInputState;
-	InputTagsInbuff.Empty();
+	
 	if (InputLockDelegate.IsBound())
 	{
 		InputLockDelegate.Execute(ActionInstance,InputDataAsset,Inputtag);
@@ -191,9 +191,9 @@ void UAct_AbilitySystemComponent::CheckFinalInput()
 	{
  		InputExecuteDelegate.Execute(FinalInputInfo);
 	}
+	InputTagsInbuff.Empty();
 	GetWorld()->GetTimerManager().ClearTimer(FinalInputHandle);
 }
-
 void UAct_AbilitySystemComponent::OnInputFinal(const FAbilityInputInfo& InputInfo)
 {//TODO::进行对应内容的处理：
 	if (InputInfo.InputTag==ActTagContainer::InputRelaxAttack)
@@ -220,11 +220,16 @@ void UAct_AbilitySystemComponent::OnInputFinal(const FAbilityInputInfo& InputInf
 		FAct_AbilityTypes RollingAbility;
 		if (AbilityDataManager->AbilityData->GetAbilityTypesNotInComboChainByTag(ActTagContainer::InputRolling,RollingAbility))
 		{
-			this->TryActivateAbilityByClass(RollingAbility.Ability);
+			if (!this->TryActivateAbilityByClass(RollingAbility.Ability))
+			{
+				AAct_Character * Character=Cast<AAct_Character>(GetOwner());
+				Character->SetCharacterAttackingState_Implementation(ECharacterState::UnAttacking);
+				
+			}
+			
 		}
 	}
 }
-
 void UAct_AbilitySystemComponent::SetInputDisable(const FGameplayTagContainer& DisableTag)
 {	TArray<FGameplayTag> DisAbleTags=DisableTag.GetGameplayTagArray();
 	for (FGameplayTag  Tag:DisAbleTags)
@@ -235,7 +240,6 @@ void UAct_AbilitySystemComponent::SetInputDisable(const FGameplayTagContainer& D
 		}
 	}
 }
-
 void UAct_AbilitySystemComponent::TurnPreInputToDefault()
 {
 	for (TPair<FGameplayTag,int>&Tag:AllowedPreInput)
@@ -243,7 +247,6 @@ void UAct_AbilitySystemComponent::TurnPreInputToDefault()
 		Tag.Value=1;
 	}
 }
-
 bool UAct_AbilitySystemComponent::CheckIsAllowed(FGameplayTag PreInputTag)
 {
 	if (AllowedPreInput.Find(PreInputTag))
@@ -252,8 +255,6 @@ bool UAct_AbilitySystemComponent::CheckIsAllowed(FGameplayTag PreInputTag)
 	}
 	return false;
 }
-
-
 void UAct_AbilitySystemComponent::SetInputstate(InputState InputType)
 {
 	this->CurrentInputType=InputType;
@@ -262,16 +263,19 @@ void UAct_AbilitySystemComponent::SetInputstate(InputState InputType)
 		AbilityChainManager->SelectedNode=nullptr;
 		UAct_AbilityChainChildNode * Node=AbilityChainManager->SelectedNode;
 		AAct_Character * player=Cast<AAct_Character>(GetOwner());
-		UE_LOG(LogTemp,Warning,TEXT("Try"))
+		UE_LOG(LogTemp,Warning,TEXT("%s"),*TriggerTag.ToString());
 		if (TriggerTag.IsValid()&&TriggerTag==ActTagContainer::InputHeavyAttack&&player)
 		{
 			if (AbilityChainManager->ToNextNode(Node,EAttackType::HeavyAttack,player->GetCharacterUnAttackingState_Implementation()))
 			{
 				SetInputstate(InputState::DisableInputState);
 				InputTagsInbuff.Empty();
+			
 			}
-			
-			
+		}
+		if (TriggerTag==ActTagContainer::InputDefense)
+		{
+			UAbilitySystemBlueprintLibrary::SendGameplayEventToActor(GetOwner(),TriggerTag,FGameplayEventData());
 		}
 	}
 }

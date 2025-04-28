@@ -22,7 +22,4 @@ class ACTIONDEMO_API IIAct_AbilityInterface
 
 	// Add interface functions to this class. This is the class that will be inherited to implement this interface.
 public:
-	UFUNCTION(BlueprintNativeEvent)
-	void SetTriggerTime(float TriggerTime);
-	virtual  void SetTriggerTime_Implementation(float TriggerTime)=0;
 };

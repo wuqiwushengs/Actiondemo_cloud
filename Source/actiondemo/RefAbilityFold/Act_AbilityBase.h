@@ -16,7 +16,5 @@ class ACTIONDEMO_API UAct_AbilityBase : public UGameplayAbility,public IIAct_Abi
 	GENERATED_BODY()
 public:
 	UFUNCTION()
-	virtual void SetTriggerTime_Implementation(float TriggerTime) override;
-	UFUNCTION()
 	virtual void  OnAbilityTrigger(float AbilityTime=0);
 };

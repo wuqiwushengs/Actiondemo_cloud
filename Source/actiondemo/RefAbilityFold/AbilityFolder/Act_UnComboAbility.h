@@ -15,6 +15,7 @@ class ACTIONDEMO_API UAct_UnComboAbility : public UAct_Ability
 	GENERATED_BODY()
 public:
 	virtual void ActivateAbility(const FGameplayAbilitySpecHandle Handle, const FGameplayAbilityActorInfo* ActorInfo, const FGameplayAbilityActivationInfo ActivationInfo, const FGameplayEventData* TriggerEventData) override;
+	//判断是否是长按还是松开的内容。
 	UPROPERTY(EditDefaultsOnly)
 	bool bTapped=true;
 	UPROPERTY()

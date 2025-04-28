@@ -39,7 +39,9 @@ public:
 	//Character Interface Start
 	virtual ECharacterUnAttackingState GetCharacterUnAttackingState_Implementation() override;
 	virtual UInputDataAsset* GetCharacterInputData_Implementation() override;
+	UFUNCTION(BlueprintCallable)
 	virtual void SetCharacterAttackingState_Implementation(ECharacterState State) override;
+	UFUNCTION(BlueprintCallable)
 	virtual void SetCharacterUnAttackingState_Implementation(ECharacterUnAttackingState State) override;
 	//Character Interface End
 	//CameraInit(temp)
@@ -123,6 +125,8 @@ public:
 	//AttributeSet
 	UPROPERTY()
 	const UAct_AttributeSet * CombatAttribute;
+	UPROPERTY(BlueprintReadOnly)
+	FVector2D InputValueAnyTime;
 #pragma endregion PlayerState
 
 };

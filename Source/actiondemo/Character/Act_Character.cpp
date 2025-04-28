@@ -5,7 +5,7 @@
 #include "GameFramework/SpringArmComponent.h"
 #include "KismetAnimationLibrary.h"
 #include "Camera/CameraComponent.h"
-#include "Components/ArrowComponent.h"
+#include  "actiondemo/FunctionFolder/Act_Function.h"
 #include "GameFramework/CharacterMovementComponent.h"
 #include "Kismet/KismetMathLibrary.h"
 #include "actiondemo/RefAbilityFold/AttributeContent/Act_AttributeSet.h"
@@ -64,6 +64,7 @@ UAct_AbilitySystemComponent* AAct_Character::GetAct_AbilitySystemComponent() con
 ECharacterUnAttackingState AAct_Character::GetCharacterUnAttackingState_Implementation()
 {
 	return CharacterUnAttackingState;
+	
 }
 
 UInputDataAsset* AAct_Character::GetCharacterInputData_Implementation()
@@ -79,11 +80,14 @@ void AAct_Character::SetCharacterAttackingState_Implementation(ECharacterState S
 	{
 		GetAct_AbilitySystemComponent()->SetInputstate(InputState::NormalInputState);
 	}
+	GetCharacterMovement()->MaxWalkSpeed=UAct_Function::GetOwnedWalkSpeed(this);
 }
 
 void AAct_Character::SetCharacterUnAttackingState_Implementation(ECharacterUnAttackingState State)
 {
 	CharacterUnAttackingState=State;
+	GetCharacterMovement()->MaxWalkSpeed=UAct_Function::GetOwnedWalkSpeed(this);
+	
 	
 }
 
@@ -119,19 +123,19 @@ void AAct_Character::CheckMovemntInfo()
 			//Calculate CameraRotation with the character's movement
 			float angle=UKismetAnimationLibrary::CalculateDirection(Velocity,GetControlRotation());
 			float value=CameraCurve->GetFloatValue(angle);
-			AddControllerYawInput(value);
+			AddControllerYawInput(value*2);
 		}
 	}
 	if (bStartTurn)
 	{
-	   bStartTurn=!TurnToController();
+	   bStartTurn= !TurnToController();
 	}
 }
 #pragma endregion NormalMovement
 #pragma region LongtimeMovementSaveDirection
 EEigthDirectionState AAct_Character::CalculateMovementDirection()
 {
-	float angle=UKismetAnimationLibrary::CalculateDirection(GetVelocity(),FRotator(0,0,0));
+	float angle=UKismetAnimationLibrary::CalculateDirection(GetVelocity(),FRotator(0,1,0));
 	float absAngle=FMath::Abs(angle);
 	if (absAngle<=22.5)
 	{
@@ -235,7 +239,7 @@ void AAct_Character::SetupPlayerInputComponent(UInputComponent* PlayerInputCompo
 }
 
 void AAct_Character::MoveAround(const FInputActionValue& InputAction)
-{	
+{	InputValueAnyTime=InputAction.Get<FVector2D>();
 	if (!bForward)
 	{
 		InputValue=InputAction.Get<FVector2D>();
@@ -258,7 +262,7 @@ void AAct_Character::MoveAround(const FInputActionValue& InputAction)
 		FRotator ControllRotation=GetControlRotation();
 		float ValueX=FMath::Abs(InputValue.X-InputAction.Get<FVector2D>().X);
 		float ValueY=FMath::Abs(InputValue.Y-InputAction.Get<FVector2D>().Y);
-		if (ValueX>0.2||ValueY>0.2)
+		if (ValueX>0.2||ValueY>0.2||GetCharacterMovement()->GetLastUpdateVelocity().Length()<=10)
 		{
 			bForward=false;
 			LockOnce=false;

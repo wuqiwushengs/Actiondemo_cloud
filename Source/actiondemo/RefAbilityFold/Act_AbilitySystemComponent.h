@@ -96,7 +96,7 @@ public:
 	void SetInputDisable(const FGameplayTagContainer  & DisableTag );
 	void TurnPreInputToDefault();
 	bool CheckIsAllowed(FGameplayTag PreInputTag);
-	UFUNCTION()
+	UFUNCTION(BlueprintCallable)
 	void SetInputstate(InputState InputType);
 	UPROPERTY()
 	FTimerHandle FinalInputHandle;

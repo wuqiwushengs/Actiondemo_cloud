@@ -24,7 +24,7 @@ public:
 	virtual void PreActivate(const FGameplayAbilitySpecHandle Handle, const FGameplayAbilityActorInfo* ActorInfo, const FGameplayAbilityActivationInfo ActivationInfo, FOnGameplayAbilityEnded::FDelegate* OnGameplayAbilityEndedDelegate, const FGameplayEventData* TriggerEventData) override;
 	virtual void ActivateAbility(const FGameplayAbilitySpecHandle Handle, const FGameplayAbilityActorInfo* ActorInfo, const FGameplayAbilityActivationInfo ActivationInfo, const FGameplayEventData*  TriggerEventData) override;
 	virtual void EndAbility(const FGameplayAbilitySpecHandle Handle, const FGameplayAbilityActorInfo* ActorInfo, const FGameplayAbilityActivationInfo ActivationInfo, bool bReplicateEndAbility, bool bWasCancelled) override;
-	UFUNCTION()
+	UFUNCTION(BlueprintCallable)
 	void OnEndAbility();
 	UFUNCTION(BlueprintNativeEvent)
 	bool bUseSkillContext();
@@ -117,7 +117,7 @@ public:
 	UPROPERTY(EditDefaultsOnly,meta=(EditCondition="bisContinueMontage"))
 	UAnimMontage* PostContinueMontage;
 	//保证Interupt安全的方式
-	UFUNCTION()
+	UFUNCTION(BlueprintCallable)
 	virtual void HandleMontageInterrupted();
 	//用来处理蓄力技能的后摇。包括格挡技能，假如其格挡失误或者如何可通过你的后面重写该函数来处理。
 	UFUNCTION()
