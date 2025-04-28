@@ -74,7 +74,7 @@ void UAct_AbilitySystemComponent::ProcessingInputDataStarted(const FInputActionI
 				//假如已经绑定了那就不再进行绑定
 				int32 index=this->InputTagsInbuff.Num()-1;
 				FTimerDelegate FinalExecute;
-				FinalExecute.BindLambda([this,ActionInstance,InputDataAsset,index](){SetInputLock(ActionInstance,InputDataAsset,this->InputTagsInbuff[index].InputTag);CheckFinalInput();});
+				FinalExecute.BindLambda([this,ActionInstance,InputDataAsset,index](){SetInputLock(ActionInstance,InputDataAsset,this->InputTagsInbuff,index);CheckFinalInput();});
 				GetWorld()->GetTimerManager().SetTimer(FinalInputHandle,FinalExecute,AbilityInputBuffTime,false);
 			}
 			break;
@@ -141,13 +141,20 @@ bool UAct_AbilitySystemComponent::ChekcInputLengthToSetInputLock(float InputLeng
 	return true;
 }
 
-void UAct_AbilitySystemComponent::SetInputLock(const FInputActionInstance & ActionInstance,UInputDataAsset *InputDataAsset,FGameplayTag Inputtag)
+void UAct_AbilitySystemComponent::SetInputLock(const FInputActionInstance & ActionInstance,UInputDataAsset *InputDataAsset,TArray<FAbilityInputInfo> & Content,int32 index)
 {
+
+	if (Content.Num()-1<index)
+	{
+		InputTagsInbuff.Empty();
+		GetWorld()->GetTimerManager().ClearTimer(FinalInputHandle);
+		return;
+	}
 	CurrentInputType=InputState::DisableInputState;
-	
+	FGameplayTag InputTag=Content[index].InputTag;
 	if (InputLockDelegate.IsBound())
 	{
-		InputLockDelegate.Execute(ActionInstance,InputDataAsset,Inputtag);
+		InputLockDelegate.Execute(ActionInstance,InputDataAsset, InputTag);
 	}
 	
 }

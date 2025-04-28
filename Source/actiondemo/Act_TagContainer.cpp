@@ -10,6 +10,7 @@ namespace ActTagContainer
 	ACTIONDEMO_API UE_DEFINE_GAMEPLAY_TAG(LockTarget,"AttackStatement.LockTarget")
 	ACTIONDEMO_API UE_DEFINE_GAMEPLAY_TAG(InputDefense,"AttackStatement.Attack.Input.Defense")
 	ACTIONDEMO_API UE_DEFINE_GAMEPLAY_TAG(InputRolling,"AttackStatement.Attack.Input.Rolling")
+	ACTIONDEMO_API UE_DEFINE_GAMEPLAY_TAG(InputDashDirection,"AttackStateMenT.Attack.Input.InputDashDirection")
 	ACTIONDEMO_API UE_DEFINE_GAMEPLAY_TAG(RelaxAttack,"AttackStatement.Attack.Ability.RelaxAttack")
 	ACTIONDEMO_API UE_DEFINE_GAMEPLAY_TAG(HeavyAttack,"AttackStatement.Attack.Ability.HeavyAttack")
 	ACTIONDEMO_API UE_DEFINE_GAMEPLAY_TAG(Defense,"AttackStatement.Attack.Ability.Defense")

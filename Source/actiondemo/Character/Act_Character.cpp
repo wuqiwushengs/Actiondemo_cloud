@@ -239,7 +239,7 @@ void AAct_Character::SetupPlayerInputComponent(UInputComponent* PlayerInputCompo
 }
 
 void AAct_Character::MoveAround(const FInputActionValue& InputAction)
-{	InputValueAnyTime=InputAction.Get<FVector2D>();
+{	
 	if (!bForward)
 	{
 		InputValue=InputAction.Get<FVector2D>();
@@ -271,7 +271,6 @@ void AAct_Character::MoveAround(const FInputActionValue& InputAction)
 		AddMovementInput(ForwardVector,1);
 	}
 }
-
 void AAct_Character::LookAround(const FInputActionValue& InputAction)
 {
 	if (!CanMovAroundFree)return;
@@ -327,7 +326,21 @@ void AAct_Character::BindSkill(const FInputActionInstance& ActionInstance, FGame
 		{	
 			GetAct_AbilitySystemComponent()->ProcessingInputDataTrigger(ActionInstance,Inputag,InputDataAsset,ActionInstance.GetElapsedTime());
 		}
+}
+
+void AAct_Character::CheckRollingCanExecuteAndExecute(const FInputActionValue& InputAction)
+{	//在防御状态固定设置朝向
+	if (GetAct_AbilitySystemComponent()->GetOwnedGameplayTags().HasTag(ActTagContainer::InputDefense))
+	{
+		DashDirection2d=InputAction.Get<FVector2D>();
+		FGameplayTagContainer DashContainer;
+		DashContainer.AddTag(ActTagContainer::Rolling);
+		if (GetAct_AbilitySystemComponent()->TryActivateAbilitiesByTag(DashContainer))
+		{
+			GetAct_AbilitySystemComponent()->SetInputstate(InputState::DisableInputState);
+		}
 	
+	}
 	
 }
 #pragma region CameraSystem

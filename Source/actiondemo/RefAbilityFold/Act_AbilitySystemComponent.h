@@ -70,7 +70,7 @@ public:
 	UFUNCTION()
 	bool ChekcInputLengthToSetInputLock(float InputLength,const FInputActionInstance & ActionInstance,UInputDataAsset *InputDataAsset,FGameplayTag Inputtag);
 	UFUNCTION(BlueprintCallable)
-	void SetInputLock(const FInputActionInstance & ActionInstance,UInputDataAsset *InputDataAsset,FGameplayTag Inputtag);
+	void SetInputLock(const FInputActionInstance & ActionInstance,UInputDataAsset *InputDataAsset,TArray<FAbilityInputInfo> & Content,int32 index);
 	UFUNCTION(BlueprintCallable)
 	void SetInputUnlock();
 	//计算缓冲区存储的输入实际应该采用哪一个输入

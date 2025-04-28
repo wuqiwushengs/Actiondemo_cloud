@@ -109,13 +109,18 @@ public:
 	//@TODO:MakeInputDetect
 	void BindSkill(const FInputActionInstance& ActionInstance,FGameplayTag Inputag);
 #pragma endregion InputBindFunction
-
 	//Property
 	UPROPERTY(EditDefaultsOnly,BlueprintReadWrite,Category="Abilitysystem")
 	TObjectPtr<UAct_AbilitySystemComponent> ActAbilitySystemComponent;
 	UPROPERTY(BlueprintReadWrite,Category="InputDatat")
 	TObjectPtr<UInputDataAsset> InputDataAsset;
-
+#pragma region RollingSystem
+	UFUNCTION(BlueprintCallable)
+	void CheckRollingCanExecuteAndExecute(const FInputActionValue& InputAction);
+	UPROPERTY(BlueprintReadOnly)
+	FVector2D DashDirection2d;
+	
+#pragma endregion  RollingSystem
 //Playerstate
 #pragma region PlayerState
 	UPROPERTY(EditDefaultsOnly,BlueprintReadWrite,Category="Playerstate")
@@ -125,8 +130,7 @@ public:
 	//AttributeSet
 	UPROPERTY()
 	const UAct_AttributeSet * CombatAttribute;
-	UPROPERTY(BlueprintReadOnly)
-	FVector2D InputValueAnyTime;
+
 #pragma endregion PlayerState
 
 };
