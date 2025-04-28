@@ -127,7 +127,7 @@ bool UAct_AbilityChainManager::ToNextNode(UAct_AbilityChainChildNode *& CurrentN
 	
 	if (LastAbilityState!= CurrentState||!SelectedNode&&AbilityChainsRoot[CurrentState])
 	{
-		if (this->AbilityChainsRoot[CurrentState]&&this->AbilityChainsRoot[CurrentState])
+		if (this->AbilityChainsRoot.Find(CurrentState))
 		{
 			CurrentNode= (AttackType == EAttackType::RelaxAttack) 
 		   ? this->AbilityChainsRoot[CurrentState]->PrimaryRelaxAbilityHead 

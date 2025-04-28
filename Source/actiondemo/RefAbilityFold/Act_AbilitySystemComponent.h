@@ -20,7 +20,7 @@ struct FAbilityInputInfo
 	FAbilityInputInfo(){};
 	FAbilityInputInfo(FGameplayTag InTag): InputTag(InTag){};
 	FAbilityInputInfo(FGameplayTag Intag,float InInputWordTime=0,float InInputIntervalTime=0,EInputWeightType InInputWeight=EInputWeightType::Weight0):InputTag(Intag),InputWordTime(InInputWordTime),InputIntervalTime(InInputIntervalTime),InputWeightType(InInputWeight){};
-	UPROPERTY()
+	UPROPERTY(BlueprintReadOnly)
 	FGameplayTag InputTag;
 	UPROPERTY()
 	float InputWordTime;

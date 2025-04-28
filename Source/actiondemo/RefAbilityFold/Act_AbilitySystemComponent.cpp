@@ -44,7 +44,7 @@ void UAct_AbilitySystemComponent::ProcessingInputDataStarted(const FInputActionI
 	switch (CurrentInputType)
 	{
 	case  InputState::PreInputState:
-		{	
+		{	//TODO::优化操作手感，感觉这里经常会卡手，不容易连击，需要调整。
 			if (!CheckIsAllowed(Inputag)) break;
 			FAbilityInputInfo Abilityinfo(Inputag,WordTime,InputTagsInbuff.Num()<=0?0:WordTime-InputTagsInbuff[0].InputWordTime,InputData.InputType);
 			InputTagsInbuff.Add(Abilityinfo);
@@ -83,6 +83,7 @@ void UAct_AbilitySystemComponent::ProcessingInputDataStarted(const FInputActionI
 	case InputState::DisableInputState:
 		{	//用来处理在输入锁定后连续打击类型的技能
 			//需要加一个判断，假如当前的输入tag是预输入阶段的tag那么就执行
+			InputTagsInbuff.Empty();
 			if (Inputag==AbilityChainManager->CurrentAbilityType.InputTag)
 			{
 				FGameplayEventData EventData;
@@ -111,6 +112,11 @@ void UAct_AbilitySystemComponent::ProcessingInputDataComplete(const FInputAction
 	if (AbilityChainManager->CurrentAbilityType.InputTag==Inputag)
 	{	FGameplayEventData EventData;
 		UAbilitySystemBlueprintLibrary::SendGameplayEventToActor(GetOwner(),ActTagContainer::ExeHoldAbilityInputRelaxAttackReleased,EventData);
+	}
+	if (Inputag==ActTagContainer::InputDefense)
+	{
+		RemoveLooseGameplayTag(ActTagContainer::InputDefense);
+		
 	}
 	TriggerTag=FGameplayTag();
 	
@@ -221,7 +227,7 @@ void UAct_AbilitySystemComponent::OnInputFinal(const FAbilityInputInfo& InputInf
 			this->TryActivateAbilityByClass(DefenseAbility.Ability);
 		}
 	}
-	if (InputInfo.InputTag==ActTagContainer::InputRolling)
+	/*if (InputInfo.InputTag==ActTagContainer::InputRolling)
 	{
 		//激活翻滚技能
 		FAct_AbilityTypes RollingAbility;
@@ -235,7 +241,7 @@ void UAct_AbilitySystemComponent::OnInputFinal(const FAbilityInputInfo& InputInf
 			}
 			
 		}
-	}
+	}*/
 }
 void UAct_AbilitySystemComponent::SetInputDisable(const FGameplayTagContainer& DisableTag)
 {	TArray<FGameplayTag> DisAbleTags=DisableTag.GetGameplayTagArray();
@@ -283,7 +289,9 @@ void UAct_AbilitySystemComponent::SetInputstate(InputState InputType)
 		if (TriggerTag==ActTagContainer::InputDefense)
 		{
 			UAbilitySystemBlueprintLibrary::SendGameplayEventToActor(GetOwner(),TriggerTag,FGameplayEventData());
+			InputTagsInbuff.Empty();
 		}
+		InputTagsInbuff.Empty();
 	}
 }
 
