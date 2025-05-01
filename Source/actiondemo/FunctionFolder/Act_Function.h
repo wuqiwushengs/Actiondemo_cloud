@@ -11,6 +11,14 @@
 /**
  * 
  */
+UENUM(BlueprintType)
+enum class EMontageDirection:uint8
+{
+	Forward,
+	Right,
+	Left,
+	Back,
+};
 UCLASS()
 class ACTIONDEMO_API UAct_Function : public UBlueprintFunctionLibrary
 {
@@ -20,4 +28,6 @@ public:
    static 	EEigthDirectionState  CalculateMovementsDirection(float angle);
 	UFUNCTION(BlueprintCallable)
 	static  float GetOwnedWalkSpeed(AAct_Character * Character);
+	UFUNCTION(BlueprintCallable)
+	static UAnimMontage * GetCorrectHitMontageByAngle(const FHitResult & HitResult,TMap<EMontageDirection,UAnimMontage*> MontageSource);
 };

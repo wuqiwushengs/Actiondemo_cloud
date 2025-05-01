@@ -22,9 +22,14 @@ namespace ActTagContainer
 	ACTIONDEMO_API UE_DEFINE_GAMEPLAY_TAG(ExePreInputRelaxAttack,"Input.Manage.ExePreInputRelaxAttack");
 	ACTIONDEMO_API UE_DEFINE_GAMEPLAY_TAG(ExeMulityInputRelaxAttack,"Input.Manage.ExeMutualityInputRelaxAttack");
 	ACTIONDEMO_API UE_DEFINE_GAMEPLAY_TAG(ExeInterrupt,"Character.State.InterruptClass");
+	ACTIONDEMO_API UE_DEFINE_GAMEPLAY_TAG(InterruptHurt,"Character.State.InterruptClass.Hurt")
+	ACTIONDEMO_API UE_DEFINE_GAMEPLAY_TAG(WeakState,"Character.State.WeakState");
+	//从虚弱到正常的tag
+	ACTIONDEMO_API UE_DEFINE_GAMEPLAY_TAG(Weak2Normal,"AttackStatement.Attack.Ability.Weak2Normal")
 	ACTIONDEMO_API UE_DEFINE_GAMEPLAY_TAG(ExeMulityInputExeAttack,"Input.Manage.ExeMutualityInputExeAttack");
 	ACTIONDEMO_API UE_DEFINE_GAMEPLAY_TAG(ExeHoldAbilityInputRelaxAttackReleased,"Input.Manage.ExeHoldAbilityInputRelaxAttackReleased");
 	ACTIONDEMO_API UE_DEFINE_GAMEPLAY_TAG(ExeUnComboAbilityInputReleased,"Input.Manage.ExeUnComboAbilityInputReleased");
-	
-	
+	ACTIONDEMO_API UE_DEFINE_GAMEPLAY_TAG(UnBeatable,"Character.State.UnBeatable");
+	//控制角色的Attribute数据
+	ACTIONDEMO_API UE_DEFINE_GAMEPLAY_TAG(DamageValue,"ValueChange.DamageValue");
 }

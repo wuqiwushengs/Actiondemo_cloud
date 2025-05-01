@@ -19,6 +19,7 @@ UCLASS()
 class ACTIONDEMO_API UAct_AttributeSet : public UAttributeSet
 {
 	GENERATED_BODY()
+public:
 	UAct_AttributeSet();
 	UPROPERTY()
 	FGameplayAttributeData Health;
@@ -32,7 +33,10 @@ class ACTIONDEMO_API UAct_AttributeSet : public UAttributeSet
 	UPROPERTY()
 	FGameplayAttributeData MaxStamina;
 	ATTRIBUTE_ACCESSORS(UAct_AttributeSet,MaxStamina);
-	
+	UPROPERTY()
+	FGameplayAttributeData Damage;
+	ATTRIBUTE_ACCESSORS(UAct_AttributeSet,Damage);
+
 	virtual void PreAttributeChange(const FGameplayAttribute& Attribute, float& NewValue) override;
 	virtual void PostGameplayEffectExecute(const FGameplayEffectModCallbackData& Data)  override;
 	UFUNCTION()

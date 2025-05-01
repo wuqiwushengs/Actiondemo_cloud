@@ -3,7 +3,12 @@
 
 #include "Act_AttributeSet.h"
 
-UAct_AttributeSet::UAct_AttributeSet():Health(100.0f),MaxHealth(100.0f),Stamina(1.0f),MaxStamina(1.0f)
+#include "AbilitySystemBlueprintLibrary.h"
+#include "GameplayEffectExtension.h"
+#include "actiondemo/Act_TagContainer.h"
+#include "actiondemo/Character/Act_Character.h"
+
+UAct_AttributeSet::UAct_AttributeSet():Health(100.0f),MaxHealth(100.0f),Stamina(100.0f),MaxStamina(100.0f)
 {
 }
 
@@ -29,7 +34,16 @@ void UAct_AttributeSet::PreAttributeChange(const FGameplayAttribute& Attribute, 
 }
 
 void UAct_AttributeSet::PostGameplayEffectExecute(const FGameplayEffectModCallbackData& Data)
-{
+{	
+	//用来在受到攻击的时候播放受击动画
+	if(Data.EvaluatedData.Attribute==GetHealthAttribute()&&Data.EvaluatedData.ModifierOp==EGameplayModOp::Additive)
+	{  UE_LOG(LogTemp,Warning,TEXT("%f"),Data.EvaluatedData.Magnitude)
+		FGameplayEventData EventData;
+		EventData.Target=Data.Target.GetOwnerActor();
+		EventData.Instigator=GetOwningActor();
+		AAct_Character * Player=Cast<AAct_Character>(GetOwningActor());
+		UAbilitySystemBlueprintLibrary::SendGameplayEventToActor(GetOwningActor(),ActTagContainer::InterruptHurt,EventData);
+	}
 }
 
 void UAct_AttributeSet::OnMaxAttribuetChange(FGameplayAttributeData& AffectedAttribute,

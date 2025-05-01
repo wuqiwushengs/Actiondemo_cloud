@@ -40,3 +40,9 @@ struct FSpringArmValue
 	
 };
 
+UENUM(BlueprintType)
+enum class EAddOrRemove:uint8
+{
+	Add,
+	Remove,
+};

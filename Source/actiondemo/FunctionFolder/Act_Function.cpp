@@ -49,3 +49,56 @@ float UAct_Function::GetOwnedWalkSpeed(AAct_Character* Character)
 
 	return FinalSpeed;
 }
+
+UAnimMontage* UAct_Function::GetCorrectHitMontageByAngle(const FHitResult& HitResult,
+	TMap<EMontageDirection, UAnimMontage*> MontageSource)
+{	//获取打击的actor
+	ACharacter* HitActor=Cast<ACharacter>(HitResult.GetActor());
+	if(HitActor)
+	{	//获取空间世界发现
+		FVector WorldNormal=HitResult.ImpactNormal;
+		//转换到actor本地空间
+		FVector LocalNormal=HitActor->GetActorTransform().InverseTransformVectorNoScale(WorldNormal);
+		LocalNormal.Normalize();
+		//计算水平投影
+		FVector HorizontalNormal=FVector(LocalNormal.X,LocalNormal.Y,0).GetSafeNormal();
+		//计算角度
+		float AngleRadians=FMath::Atan2(HorizontalNormal.Y,HorizontalNormal.X);
+		float AngleDegrees=FMath::RadiansToDegrees(AngleRadians);
+		if(FMath::Abs(AngleDegrees)<=30.0f)
+		{
+			if (UAnimMontage**ForwardMontage=MontageSource.Find(EMontageDirection::Forward))
+			{
+				return *ForwardMontage;
+			}
+			return nullptr;
+		}
+		if (FMath::Abs(AngleDegrees)>=55.0f)
+		{
+			if (UAnimMontage **BackMontage=MontageSource.Find(EMontageDirection::Back))
+			{
+				return  * BackMontage;
+				
+			}
+			return nullptr;
+		}
+		if (AngleDegrees>0)
+		{
+			if (UAnimMontage ** RightMontage=MontageSource.Find(EMontageDirection::Right))
+			{
+				return  *RightMontage;
+			}
+			return nullptr;
+		}
+		if (AngleDegrees<0)
+		{
+			if (UAnimMontage ** LeftMontage=MontageSource.Find(EMontageDirection::Left))
+			{
+				return *LeftMontage;
+			}
+			return nullptr;
+		}
+	}
+	return nullptr;
+}
+

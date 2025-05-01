@@ -33,7 +33,7 @@ void UAct_AbilitySystemComponent::BeginPlay()
 	}
 	//绑定输入执行函数
 	InputExecuteDelegate.BindUFunction(this,TEXT("OnInputFinal"));
-	this->RegisterGameplayTagEvent(ActTagContainer::ExePreInputRelaxAttack,EGameplayTagEventType::NewOrRemoved);
+	this->RegisterGameplayTagEvent(ActTagContainer::ExePreInputRelaxAttack,EGameplayTagEventType::NewOrRemoved).AddUObject(this,&UAct_AbilitySystemComponent::OnPreSkillExecute);
 }
 void UAct_AbilitySystemComponent::ProcessingInputDataStarted(const FInputActionInstance& ActionInstance,FGameplayTag Inputag, UInputDataAsset* InputDataAsset)
 {	
@@ -283,7 +283,7 @@ void UAct_AbilitySystemComponent::SetInputstate(InputState InputType)
 		UAct_AbilityChainChildNode * Node=AbilityChainManager->SelectedNode;
 		AAct_Character * player=Cast<AAct_Character>(GetOwner());
 		UE_LOG(LogTemp,Warning,TEXT("%s"),*TriggerTag.ToString());
-		if (TriggerTag.IsValid()&&TriggerTag==ActTagContainer::InputHeavyAttack&&player)
+		if (TriggerTag.IsValid()&&TriggerTag==ActTagContainer::InputHeavyAttack&&player&&!GetOwnedGameplayTags().HasTagExact(ActTagContainer::WeakState))
 		{
 			if (AbilityChainManager->ToNextNode(Node,EAttackType::HeavyAttack,player->GetCharacterUnAttackingState_Implementation()))
 			{
@@ -292,7 +292,7 @@ void UAct_AbilitySystemComponent::SetInputstate(InputState InputType)
 			
 			}
 		}
-		if (TriggerTag==ActTagContainer::InputDefense)
+		if (TriggerTag==ActTagContainer::InputDefense&&!GetOwnedGameplayTags().HasTagExact(ActTagContainer::WeakState))
 		{
 			UAbilitySystemBlueprintLibrary::SendGameplayEventToActor(GetOwner(),TriggerTag,FGameplayEventData());
 			InputTagsInbuff.Empty();
@@ -311,6 +311,7 @@ void UAct_AbilitySystemComponent::OnPreSkillExecute(const FGameplayTag ExeTag, i
 		if(ExeAbilityInputInfo(InputTagsInbuff,FinalInputInfo))
 		{
 			InputExecuteDelegate.Execute(FinalInputInfo);
+			UE_LOG(LogTemp,Warning,TEXT("PRE"))
 		}
 		CurrentInputType=InputState::DisableInputState;
 		InputTagsInbuff.Empty();

@@ -102,6 +102,8 @@ public:
 	virtual void SetupPlayerInputComponent(class UInputComponent* PlayerInputComponent) override;
 //InputBind
 #pragma region InputBindFunction
+	UPROPERTY(BlueprintReadWrite)
+	bool CanMoveAfterWeak=false;
 	void MoveAround(const FInputActionValue& InputAction);
 	void LookAround(const FInputActionValue& InputAction);
 	void LockSystem(const FInputActionValue& InputAction);
@@ -132,5 +134,9 @@ public:
 	const UAct_AttributeSet * CombatAttribute;
 
 #pragma endregion PlayerState
-
+#pragma  region playerHurt
+	//这个指的是玩家被击中的时候的HitResult
+	UPROPERTY(BlueprintReadWrite)
+	TArray<FHitResult> PlayerHitResult;
+#pragma  endregion  playerHurt
 };

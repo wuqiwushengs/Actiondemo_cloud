@@ -55,23 +55,19 @@ UAbilitySystemComponent* AAct_Character::GetAbilitySystemComponent() const
 {
 	return  Cast<UAbilitySystemComponent>(ActAbilitySystemComponent);
 }
-
 UAct_AbilitySystemComponent* AAct_Character::GetAct_AbilitySystemComponent() const
 {
 	return ActAbilitySystemComponent;
 }
-
 ECharacterUnAttackingState AAct_Character::GetCharacterUnAttackingState_Implementation()
 {
 	return CharacterUnAttackingState;
 	
 }
-
 UInputDataAsset* AAct_Character::GetCharacterInputData_Implementation()
 {
 	return InputDataAsset;
 }
-
 void AAct_Character::SetCharacterAttackingState_Implementation(ECharacterState State)
 {
 	CharacterState=State;
@@ -82,7 +78,6 @@ void AAct_Character::SetCharacterAttackingState_Implementation(ECharacterState S
 	}
 	GetCharacterMovement()->MaxWalkSpeed=UAct_Function::GetOwnedWalkSpeed(this);
 }
-
 void AAct_Character::SetCharacterUnAttackingState_Implementation(ECharacterUnAttackingState State)
 {
 	CharacterUnAttackingState=State;
@@ -90,7 +85,6 @@ void AAct_Character::SetCharacterUnAttackingState_Implementation(ECharacterUnAtt
 	
 	
 }
-
 void AAct_Character::CheckMovemntInfo()
 {
 #pragma  region NormalMovement
@@ -228,10 +222,6 @@ void AAct_Character::BossLeave()
 	SpringArmComponent->SocketOffset=SpringArmDefaultValue[0].slotoffset;
 }
 #pragma endregion LongtimeMovementSaveDirection
-	
-
-
-
 // Called to bind functionality to input
 void AAct_Character::SetupPlayerInputComponent(UInputComponent* PlayerInputComponent)
 {
@@ -239,7 +229,8 @@ void AAct_Character::SetupPlayerInputComponent(UInputComponent* PlayerInputCompo
 }
 
 void AAct_Character::MoveAround(const FInputActionValue& InputAction)
-{	
+{
+	if (GetAct_AbilitySystemComponent()->GetOwnedGameplayTags().HasTagExact(ActTagContainer::WeakState)) return;
 	if (!bForward)
 	{
 		InputValue=InputAction.Get<FVector2D>();
@@ -312,24 +303,42 @@ void AAct_Character::ResetController(const FInputActionValue& InputAction)
 	
 }
 void AAct_Character::BindSkill(const FInputActionInstance& ActionInstance, FGameplayTag Inputag)
-{	
+{	//如果是虚弱状态那么所有操作都只会走向从虚弱转向普通状态
+	if (GetAbilitySystemComponent()->GetOwnedGameplayTags().HasTag(ActTagContainer::WeakState))
+	{
+		if (ActionInstance.GetTriggerEvent()==ETriggerEvent::Started&&CanMoveAfterWeak)
+		{
+			FGameplayTagContainer WeakToNormal(ActTagContainer::Weak2Normal);
+			GetAct_AbilitySystemComponent()->TriggerTag=FGameplayTag();
+			if (GetAct_AbilitySystemComponent()->TryActivateAbilitiesByTag(WeakToNormal))
+			{
+				CanMoveAfterWeak=false;
+			}
+		}
+		
+	}
+	else
+	{
 		if (ActionInstance.GetTriggerEvent()==ETriggerEvent::Started)
 		{
 			GetAct_AbilitySystemComponent()->ProcessingInputDataStarted(ActionInstance,Inputag,InputDataAsset);
 		}
-		if (ActionInstance.GetTriggerEvent()==ETriggerEvent::Completed)
-		{
-			GetAct_AbilitySystemComponent()->ProcessingInputDataComplete(ActionInstance,Inputag,InputDataAsset);
-		}
+		
 		
 		if (ActionInstance.GetTriggerEvent()==ETriggerEvent::Ongoing)
 		{	
 			GetAct_AbilitySystemComponent()->ProcessingInputDataTrigger(ActionInstance,Inputag,InputDataAsset,ActionInstance.GetElapsedTime());
 		}
+	}
+	if (ActionInstance.GetTriggerEvent()==ETriggerEvent::Completed)
+	{
+		GetAct_AbilitySystemComponent()->ProcessingInputDataComplete(ActionInstance,Inputag,InputDataAsset);
+	}	
 }
 
 void AAct_Character::CheckRollingCanExecuteAndExecute(const FInputActionValue& InputAction)
 {	//在防御状态固定设置朝向
+	if (GetAct_AbilitySystemComponent()->GetOwnedGameplayTags().HasTagExact(ActTagContainer::WeakState)) return;
 	if (GetAct_AbilitySystemComponent()->GetOwnedGameplayTags().HasTag(ActTagContainer::InputDefense))
 	{
 		DashDirection2d=InputAction.Get<FVector2D>();
