@@ -369,7 +369,7 @@ void AAct_Character::TryAttackTrace(bool blineTrace)
 				FHitResult  HitResult;
 				TArray<AActor*> IgnoreActor;
 				IgnoreActor.Add(this);
-				UKismetSystemLibrary::LineTraceSingle(this,BoneInfo.Value.LastLocation,BoneInfo.Value.CurrenLocation,TraceTypeQuery1,false,IgnoreActor,EDrawDebugTrace::Persistent,HitResult,true);
+				UKismetSystemLibrary::SphereTraceSingle(this,BoneInfo.Value.LastLocation,BoneInfo.Value.CurrenLocation,25,TraceTypeQuery1,false,IgnoreActor,EDrawDebugTrace::ForOneFrame,HitResult,true);
 			
 				if (HitResult.IsValidBlockingHit()&&HitResult.GetActor())
 				{
@@ -377,24 +377,24 @@ void AAct_Character::TryAttackTrace(bool blineTrace)
 					if (Character&&!AttackedActor.Contains(Character))
 					{
 						AttackedActor.Add(Character);
-						FGameplayEffectContext AttackContent;
+						FGameplayEffectContextHandle AttackContent=ActAbilitySystemComponent->MakeEffectContext();
 						Character->AttackResult=HitResult;
 						AttackContent.AddInstigator(this,this);
 						AttackContent.AddHitResult(HitResult);
 						AttackContent.AddSourceObject(this);
-						UGameplayEffect * AvailableEffect=AttackEffect.GetDefaultObject();
-						
+						FGameplayEffectSpecHandle AvailableEffectHandle=ActAbilitySystemComponent->MakeOutgoingSpec(AttackEffect,1.f,AttackContent);
+						//增加伤害效果
 						FGameplayEffectContextHandle AffectContextHandle=ActAbilitySystemComponent->MakeEffectContext();
 						AffectContextHandle.AddSourceObject(this);
 						FGameplayEffectSpecHandle DamageHandle=ActAbilitySystemComponent->MakeOutgoingSpec(AddDamageEffect,1.f,AffectContextHandle);
 						DamageHandle.Data->SetSetByCallerMagnitude(ActTagContainer::DamageValue,AttackValue);
+						//提交效果
 						GetAbilitySystemComponent()->ApplyGameplayEffectSpecToSelf(*DamageHandle.Data.Get());
-						if (AvailableEffect)
-						{
-							
-							GetAbilitySystemComponent()->ApplyGameplayEffectToTarget(AvailableEffect,Character->GetAbilitySystemComponent());
-							UGameplayStatics::PlaySoundAtLocation(this,HitSound,HitResult.Location);
-						}
+						GetAbilitySystemComponent()->ApplyGameplayEffectSpecToTarget(*AvailableEffectHandle.Data.Get(),Character->GetAbilitySystemComponent());
+						check(HitSound);
+						UGameplayStatics::PlaySoundAtLocation(this,HitSound,HitResult.Location);
+						FGameplayTagContainer VfxTag{ActTagContainer::AttackTimeDilamation};
+						GetAct_AbilitySystemComponent()->TryActivateAbilitiesByTag(VfxTag);
 					}
 				}
 			}
@@ -419,21 +419,23 @@ else
 		if (Character&&!AttackedActor.Contains(Character))
 		{
 			AttackedActor.Add(Character);
-			FGameplayEffectContext AttackContent;
+			FGameplayEffectContextHandle AttackContent=ActAbilitySystemComponent->MakeEffectContext();
 			Character->AttackResult=HitResult;
 			AttackContent.AddInstigator(this,this);
 			AttackContent.AddHitResult(HitResult);
-			UGameplayEffect * AvailableEffect=AttackEffect.GetDefaultObject();
+			AttackContent.AddSourceObject(this);
+			FGameplayEffectSpecHandle AvailableEffectHandle=ActAbilitySystemComponent->MakeOutgoingSpec(AttackEffect,1.f,AttackContent);
+			//给自身攻击力的
 			FGameplayEffectContextHandle AffectContextHandle=ActAbilitySystemComponent->MakeEffectContext();
 			AffectContextHandle.AddSourceObject(this);
 			FGameplayEffectSpecHandle DamageHandle=ActAbilitySystemComponent->MakeOutgoingSpec(AddDamageEffect,1.f,AffectContextHandle);
 			DamageHandle.Data->SetSetByCallerMagnitude(ActTagContainer::DamageValue,AttackValue);
 			GetAbilitySystemComponent()->ApplyGameplayEffectSpecToSelf(*DamageHandle.Data.Get());
-			if (AvailableEffect)
-			{
-				GetAbilitySystemComponent()->ApplyGameplayEffectToTarget(AvailableEffect,Character->GetAbilitySystemComponent());
+				GetAbilitySystemComponent()->ApplyGameplayEffectSpecToTarget(*AvailableEffectHandle.Data.Get(),Character->GetAbilitySystemComponent());
+				check(HitSound);
 				UGameplayStatics::PlaySoundAtLocation(this,HitSound,HitResult.Location);
-			}
+			FGameplayTagContainer VfxTag{ActTagContainer::AttackTimeDilamation};
+			GetAct_AbilitySystemComponent()->TryActivateAbilitiesByTag(VfxTag);
 		}
 					 
 	}

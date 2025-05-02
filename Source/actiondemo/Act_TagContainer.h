@@ -46,5 +46,7 @@ namespace ActTagContainer
 	ACTIONDEMO_API UE_DECLARE_GAMEPLAY_TAG_EXTERN(Weak2Normal)
 	//控制角色的Attribute数据
 	ACTIONDEMO_API UE_DECLARE_GAMEPLAY_TAG_EXTERN(DamageValue)
+	//攻击中的效果
+	ACTIONDEMO_API UE_DECLARE_GAMEPLAY_TAG_EXTERN(AttackTimeDilamation)
 }
 

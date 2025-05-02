@@ -32,4 +32,5 @@ namespace ActTagContainer
 	ACTIONDEMO_API UE_DEFINE_GAMEPLAY_TAG(UnBeatable,"Character.State.UnBeatable");
 	//控制角色的Attribute数据
 	ACTIONDEMO_API UE_DEFINE_GAMEPLAY_TAG(DamageValue,"ValueChange.DamageValue");
+	ACTIONDEMO_API UE_DEFINE_GAMEPLAY_TAG(AttackTimeDilamation,"VFX.AttackTimeDilamation")
 }

@@ -11,12 +11,7 @@ void UAttackResultSingleCheck::NotifyEnd(USkeletalMeshComponent* MeshComp, UAnim
 	Super::NotifyEnd(MeshComp, Animation, EventReference);
 	if (AAct_Character * Character=Cast<AAct_Character>(MeshComp->GetOwner()))
 	{
-		for (TPair<FName,FLineTraceInfo>& BoneInfo:Character->TraceBoneAndInfo)
-		{
-			BoneInfo.Value.InitLocation();
-			UE_LOG(LogTemp,Warning,TEXT("Current %s"),*BoneInfo.Value.CurrenLocation.ToString());
-			UE_LOG(LogTemp,Warning,TEXT("Last  %s"),*BoneInfo.Value.CurrenLocation.ToString());
-		}
+		Character->SingleBoneAndInfo.begin().Value().InitLocation();
 		Character->AttackedActor.Empty();
 		Character->PlayerHitResult.Empty();
 	}
