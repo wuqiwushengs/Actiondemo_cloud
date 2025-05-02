@@ -12,6 +12,8 @@
 #include "actiondemo/Character/Enemy/Act_EnemyBase.h"
 #include "Kismet/KismetMathLibrary.h"
 #include "actiondemo/RefAbilityFold/AttributeContent/Act_AttributeSet.h"
+#include "Kismet/GameplayStatics.h"
+#include "Sound/SoundCue.h"
 #include "Kismet/KismetSystemLibrary.h"
 
 
@@ -391,10 +393,9 @@ void AAct_Character::TryAttackTrace(bool blineTrace)
 						{
 							
 							GetAbilitySystemComponent()->ApplyGameplayEffectToTarget(AvailableEffect,Character->GetAbilitySystemComponent());
+							UGameplayStatics::PlaySoundAtLocation(this,HitSound,HitResult.Location);
 						}
-						
 					}
-					 
 				}
 			}
 		}
@@ -423,7 +424,16 @@ else
 			AttackContent.AddInstigator(this,this);
 			AttackContent.AddHitResult(HitResult);
 			UGameplayEffect * AvailableEffect=AttackEffect.GetDefaultObject();
-			GetAbilitySystemComponent()->ApplyGameplayEffectToTarget(AvailableEffect,Character->GetAbilitySystemComponent());
+			FGameplayEffectContextHandle AffectContextHandle=ActAbilitySystemComponent->MakeEffectContext();
+			AffectContextHandle.AddSourceObject(this);
+			FGameplayEffectSpecHandle DamageHandle=ActAbilitySystemComponent->MakeOutgoingSpec(AddDamageEffect,1.f,AffectContextHandle);
+			DamageHandle.Data->SetSetByCallerMagnitude(ActTagContainer::DamageValue,AttackValue);
+			GetAbilitySystemComponent()->ApplyGameplayEffectSpecToSelf(*DamageHandle.Data.Get());
+			if (AvailableEffect)
+			{
+				GetAbilitySystemComponent()->ApplyGameplayEffectToTarget(AvailableEffect,Character->GetAbilitySystemComponent());
+				UGameplayStatics::PlaySoundAtLocation(this,HitSound,HitResult.Location);
+			}
 		}
 					 
 	}
