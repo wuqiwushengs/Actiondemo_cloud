@@ -37,6 +37,11 @@ void UGEECalculation_Hurt::Execute_Implementation(const FGameplayEffectCustomExe
 	FAggregatorEvaluateParameters EvaluateParameter;
 	EvaluateParameter.SourceTags=Source;
 	EvaluateParameter.TargetTags=Target;
+	for (FName Tag:ExecutionParams.GetSourceAbilitySystemComponent()->GetOwner()->Tags)
+	{
+		UE_LOG(LogTemp,Warning,TEXT("%s"),*Tag.ToString());
+	}
+	//TODO::在这里将射线检测的内容放置到角色的hitresult当中。
 	float Health =0.0f;
 	ExecutionParams.AttemptCalculateCapturedAttributeMagnitude(DamageStatic().HealthDef,EvaluateParameter,Health);
 	float StaminaDef=0.0f;
@@ -44,7 +49,7 @@ void UGEECalculation_Hurt::Execute_Implementation(const FGameplayEffectCustomExe
 	float DamageDef=0.0;
 	ExecutionParams.AttemptCalculateCapturedAttributeMagnitude(DamageStatic().DamageDef,EvaluateParameter,DamageDef);
 	float MaxStaminaValue=100.0f;
-	float DamageCost=1.2;
+	float DamageCost=2;
 	//计算百分比减伤
 	float  FirstDecrease=StaminaDef/(StaminaDef+MaxStaminaValue);
 	float DamageAfterFirstDecrease=DamageDef*FirstDecrease;

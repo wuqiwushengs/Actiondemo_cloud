@@ -46,3 +46,19 @@ enum class EAddOrRemove:uint8
 	Add,
 	Remove,
 };
+
+USTRUCT(BlueprintType)
+struct FLineTraceInfo
+{
+	GENERATED_BODY()
+	UPROPERTY(BlueprintReadOnly)
+	FVector CurrenLocation=FVector::ZeroVector;
+	UPROPERTY(BlueprintReadOnly)
+	FVector LastLocation=FVector::ZeroVector;
+	void  InitLocation()
+	{
+		CurrenLocation=FVector::ZeroVector;
+		LastLocation=FVector::ZeroVector;
+	}
+};
+

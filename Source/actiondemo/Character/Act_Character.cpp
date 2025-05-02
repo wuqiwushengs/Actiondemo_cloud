@@ -2,11 +2,14 @@
 
 
 #include "Act_Character.h"
+
+#include "AbilitySystemBlueprintLibrary.h"
 #include "GameFramework/SpringArmComponent.h"
 #include "KismetAnimationLibrary.h"
 #include "Camera/CameraComponent.h"
 #include  "actiondemo/FunctionFolder/Act_Function.h"
 #include "GameFramework/CharacterMovementComponent.h"
+#include "actiondemo/Character/Enemy/Act_EnemyBase.h"
 #include "Kismet/KismetMathLibrary.h"
 #include "actiondemo/RefAbilityFold/AttributeContent/Act_AttributeSet.h"
 #include "Kismet/KismetSystemLibrary.h"
@@ -17,7 +20,6 @@ AAct_Character::AAct_Character()
 {
 	// Set this character to call Tick() every frame.  You can turn this off to improve performance if you don't need it.
 	PrimaryActorTick.bCanEverTick = true;
-	ActAbilitySystemComponent=CreateDefaultSubobject<UAct_AbilitySystemComponent>("Act_AbilitySystemComponent");
 	SpringArmComponent=CreateDefaultSubobject<USpringArmComponent>("SpringArmComponent");
 	CameraComponent=CreateDefaultSubobject<UCameraComponent>("CameraComponent");
 	CameraComponent->SetupAttachment(SpringArmComponent);
@@ -351,6 +353,81 @@ void AAct_Character::CheckRollingCanExecuteAndExecute(const FInputActionValue& I
 	
 	}
 	
+}
+
+void AAct_Character::TryAttackTrace(bool blineTrace)
+{
+	if (blineTrace)
+	{
+		for (TPair<FName,FLineTraceInfo> & BoneInfo:TraceBoneAndInfo)
+		{	BoneInfo.Value.LastLocation=BoneInfo.Value.CurrenLocation;
+			BoneInfo.Value.CurrenLocation=GetMesh()->GetSocketLocation(BoneInfo.Key);
+			if (BoneInfo.Value.CurrenLocation!=FVector::ZeroVector&&BoneInfo.Value.LastLocation!=FVector::ZeroVector)
+			{
+				FHitResult  HitResult;
+				TArray<AActor*> IgnoreActor;
+				IgnoreActor.Add(this);
+				UKismetSystemLibrary::LineTraceSingle(this,BoneInfo.Value.LastLocation,BoneInfo.Value.CurrenLocation,TraceTypeQuery1,false,IgnoreActor,EDrawDebugTrace::Persistent,HitResult,true);
+			
+				if (HitResult.IsValidBlockingHit()&&HitResult.GetActor())
+				{
+					Act_EnemyBase * Character=Cast<Act_EnemyBase>(HitResult.GetActor());
+					if (Character&&!AttackedActor.Contains(Character))
+					{
+						AttackedActor.Add(Character);
+						FGameplayEffectContext AttackContent;
+						Character->AttackResult=HitResult;
+						AttackContent.AddInstigator(this,this);
+						AttackContent.AddHitResult(HitResult);
+						AttackContent.AddSourceObject(this);
+						UGameplayEffect * AvailableEffect=AttackEffect.GetDefaultObject();
+						
+						FGameplayEffectContextHandle AffectContextHandle=ActAbilitySystemComponent->MakeEffectContext();
+						AffectContextHandle.AddSourceObject(this);
+						FGameplayEffectSpecHandle DamageHandle=ActAbilitySystemComponent->MakeOutgoingSpec(AddDamageEffect,1.f,AffectContextHandle);
+						DamageHandle.Data->SetSetByCallerMagnitude(ActTagContainer::DamageValue,AttackValue);
+						GetAbilitySystemComponent()->ApplyGameplayEffectSpecToSelf(*DamageHandle.Data.Get());
+						if (AvailableEffect)
+						{
+							
+							GetAbilitySystemComponent()->ApplyGameplayEffectToTarget(AvailableEffect,Character->GetAbilitySystemComponent());
+						}
+						
+					}
+					 
+				}
+			}
+		}
+	}
+else
+{
+	TPair<FName,FLineTraceInfo>& FootBoneAndInfo=*SingleBoneAndInfo.begin();
+	FootBoneAndInfo.Value.LastLocation=FootBoneAndInfo.Value.CurrenLocation;
+	FootBoneAndInfo.Value.CurrenLocation=GetMesh()->GetSocketLocation(FootBoneAndInfo.Key);
+	
+	FHitResult  HitResult;
+	TArray<AActor*> IgnoreActor;
+	IgnoreActor.Add(this);
+	if (FootBoneAndInfo.Value.CurrenLocation!=FVector::ZeroVector&&FootBoneAndInfo.Value.LastLocation!=FVector::ZeroVector)
+	{
+		UKismetSystemLibrary::SphereTraceSingle(this,FootBoneAndInfo.Value.LastLocation,FootBoneAndInfo.Value.CurrenLocation,25,TraceTypeQuery1,false,IgnoreActor,EDrawDebugTrace::Persistent,HitResult,true);
+	}
+	if (HitResult.IsValidBlockingHit()&&HitResult.GetActor())
+	{
+		Act_EnemyBase * Character=Cast<Act_EnemyBase>(HitResult.GetActor());
+		if (Character&&!AttackedActor.Contains(Character))
+		{
+			AttackedActor.Add(Character);
+			FGameplayEffectContext AttackContent;
+			Character->AttackResult=HitResult;
+			AttackContent.AddInstigator(this,this);
+			AttackContent.AddHitResult(HitResult);
+			UGameplayEffect * AvailableEffect=AttackEffect.GetDefaultObject();
+			GetAbilitySystemComponent()->ApplyGameplayEffectToTarget(AvailableEffect,Character->GetAbilitySystemComponent());
+		}
+					 
+	}
+}
 }
 #pragma region CameraSystem
 void AAct_Character::OnlookAroundEnd(const FInputActionValue& InputAction)

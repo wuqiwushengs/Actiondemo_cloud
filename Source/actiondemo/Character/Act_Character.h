@@ -3,21 +3,21 @@
 #pragma once
 
 #include "CoreMinimal.h"
+#include "Act_CharacterBase.h"
 #include "AbilitySystemInterface.h"
 #include "CharacterInferface.h"
 #include "InputAction.h"
-#include "actiondemo/Act_TagContainer.h"
 #include "actiondemo/InputDataAsset.h"
 #include "CharacterTypes.h"
 #include "actiondemo/RefAbilityFold/Act_AbilitySystemComponent.h"
-#include "GameFramework/Character.h"
 #include "Act_Character.generated.h"
 
+class Act_EnemyBase;
 class UCameraComponent;
 class USpringArmComponent;
 
 UCLASS()
-class ACTIONDEMO_API AAct_Character : public ACharacter,public IAbilitySystemInterface,public ICharacterInferface
+class ACTIONDEMO_API AAct_Character : public Act_CharacterBase,public ICharacterInferface,public IAbilitySystemInterface
 {
 	GENERATED_BODY()
 
@@ -97,7 +97,8 @@ public:
 	UPROPERTY(EditDefaultsOnly)
 	TArray<FSpringArmValue> SpringArmDefaultValue;
 #pragma endregion CameraSystem
-	
+	UPROPERTY(EditDefaultsOnly,BlueprintReadWrite,Category="Abilitysystem")
+	TObjectPtr<UAct_AbilitySystemComponent> ActAbilitySystemComponent;
 	// Called to bind functionality to input
 	virtual void SetupPlayerInputComponent(class UInputComponent* PlayerInputComponent) override;
 //InputBind
@@ -111,9 +112,7 @@ public:
 	//@TODO:MakeInputDetect
 	void BindSkill(const FInputActionInstance& ActionInstance,FGameplayTag Inputag);
 #pragma endregion InputBindFunction
-	//Property
-	UPROPERTY(EditDefaultsOnly,BlueprintReadWrite,Category="Abilitysystem")
-	TObjectPtr<UAct_AbilitySystemComponent> ActAbilitySystemComponent;
+	
 	UPROPERTY(BlueprintReadWrite,Category="InputDatat")
 	TObjectPtr<UInputDataAsset> InputDataAsset;
 #pragma region RollingSystem
@@ -132,11 +131,26 @@ public:
 	//AttributeSet
 	UPROPERTY()
 	const UAct_AttributeSet * CombatAttribute;
-
 #pragma endregion PlayerState
 #pragma  region playerHurt
 	//这个指的是玩家被击中的时候的HitResult
 	UPROPERTY(BlueprintReadWrite)
 	TArray<FHitResult> PlayerHitResult;
+	UPROPERTY(EditDefaultsOnly)
+	TMap<FName,FLineTraceInfo> TraceBoneAndInfo;
+	UPROPERTY(EditDefaultsOnly)
+	TMap<FName,FLineTraceInfo> SingleBoneAndInfo;
+     UFUNCTION()
+	 void TryAttackTrace(bool blineTrace);
+	 UPROPERTY(EditDefaultsOnly)
+	 TSubclassOf<UGameplayEffect> AttackEffect;
+	UPROPERTY(EditDefaultsOnly)
+	TSubclassOf<UGameplayEffect> AddDamageEffect;
+	UPROPERTY()
+	TArray<Act_EnemyBase*> AttackedActor;
+	UPROPERTY()
+	float AttackValue=10.0f;
+	UPROPERTY(BlueprintReadOnly,EditDefaultsOnly)
+	USoundCue * HitSound;
 #pragma  endregion  playerHurt
 };

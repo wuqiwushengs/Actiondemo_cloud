@@ -129,7 +129,20 @@ void UAct_Ability::EndAbility(const FGameplayAbilitySpecHandle Handle, const FGa
 }
 void UAct_Ability::OnEndAbility()
 {	//绑定结束事件
+
 	EndAbility(GetCurrentAbilitySpecHandle(),GetCurrentActorInfo(),GetCurrentActivationInfo(),true,false);
+}
+
+void UAct_Ability::CancelAbility(const FGameplayAbilitySpecHandle Handle, const FGameplayAbilityActorInfo* ActorInfo,
+	const FGameplayAbilityActivationInfo ActivationInfo, bool bReplicateCancelAbility)
+{
+	Super::CancelAbility(Handle, ActorInfo, ActivationInfo, bReplicateCancelAbility);
+	/*AAct_Character * Character=Cast<AAct_Character>(GetOwningActorFromActorInfo());
+	if (Character)
+	{
+		Character->SetCharacterAttackingState_Implementation(ECharacterState::UnAttacking);
+	}*/
+	
 }
 
 bool UAct_Ability::bUseSkillContext_Implementation()
@@ -141,6 +154,12 @@ void UAct_Ability::HandleMontageInterrupted()
 {	
 	if (GetAbilitySystemComponentFromActorInfo()->GetOwnedGameplayTags().HasTag(ActTagContainer::ExeInterrupt))
 	{
+		AAct_Character * Character=Cast<AAct_Character>(GetOwningActorFromActorInfo());
+		if (Character)
+		{
+			Character->SetCharacterAttackingState_Implementation(ECharacterState::UnAttacking);
+		}
+		UE_LOG(LogTemp,Warning,TEXT("Dead"))
 		OnEndAbility();
 	}
 }

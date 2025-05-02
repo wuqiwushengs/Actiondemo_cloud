@@ -26,6 +26,7 @@ public:
 	virtual void EndAbility(const FGameplayAbilitySpecHandle Handle, const FGameplayAbilityActorInfo* ActorInfo, const FGameplayAbilityActivationInfo ActivationInfo, bool bReplicateEndAbility, bool bWasCancelled) override;
 	UFUNCTION(BlueprintCallable)
 	void OnEndAbility();
+	virtual void  CancelAbility(const FGameplayAbilitySpecHandle Handle, const FGameplayAbilityActorInfo* ActorInfo, const FGameplayAbilityActivationInfo ActivationInfo, bool bReplicateCancelAbility) override;
 	UFUNCTION(BlueprintNativeEvent)
 	bool bUseSkillContext();
 	bool bUseSkillContext_Implementation();
